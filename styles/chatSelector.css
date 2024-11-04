@@ -7,7 +7,6 @@
     padding: 3px;
     border-radius: 3px;
     margin-bottom: 3px;
-    color: white;
 }
 
 .character-select {
@@ -15,7 +14,7 @@
     min-width: 120px;
     padding: 2px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.1);
+    background: hsl(60deg 9.3% 83.14%);
     border: 1px solid var(--color-border-light-tertiary);
     color: black;
     font-size: 12px;

@@ -1,19 +1,21 @@
 {
     "id": "character-chat-selector",
     "title": "Character Chat Selector",
-    "description": "캐릭터를 선택하여 채팅할 수 있는 선택기를 제공합니다.",
+    "description": "Provides a tokenless selector for Actors in your scene to chat with, as well as chat message customization.",
     "version": "1.0.0",
     "compatibility": {
-      "minimum": "12",
-      "verified": "12"
+        "minimum": "11",
+        "verified": "12",
+        "maximum": "12"
     },
     "authors": [
       {
-        "name": "Your Name"
+        "name": "sarang"
       }
     ],
     "esmodules": [
-      "scripts/module.js"
+      "scripts/module.js",
+      "scripts/chatSelector.js"
     ],
     "styles": [
       "styles/chatSelector.css"
@@ -23,6 +25,16 @@
         "lang": "ko",
         "name": "한국어",
         "path": "languages/ko.json"
+      },
+      {
+        "lang": "ja",
+        "name": "日本語",
+        "path": "languages/ja.json"
+      },
+      {
+        "lang": "en",
+        "name": "English",
+        "path": "languages/en.json"
       }
     ]
   }

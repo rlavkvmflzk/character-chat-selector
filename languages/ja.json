@@ -1,0 +1,46 @@
+{
+    "CHATSELECTOR": {
+        "Default": "デフォルト",
+        "Settings": {
+            "ShowSelector": {
+                "Name": "チャットセレクターを表示",
+                "Hint": "トークンを選択せずにキャラクターを選択してチャットできるセレクターを表示します。"
+            },
+            "SpeakAsToken": {
+                "Name": "トークンとして話すモード",
+                "Hint": "有効にすると、トークンがシーンになくても、選択したキャラクターのトークンで話しているように動作します。"
+            },
+            "ShowPortrait": {
+                "Name": "チャットポートレートを表示",
+                "Hint": "チャットメッセージに話者のポートレートを表示します。"
+            },
+            "PortraitSize": {
+                "Name": "ポートレートサイズ",
+                "Hint": "チャットポートレートのサイズをピクセル単位で設定します。"
+            },
+            "PortraitBorder": {
+                "Name": "ポートレート枠スタイル",
+                "Choices": {
+                    "Default": "デフォルト",
+                    "None": "なし",
+                    "Square": "四角",
+                    "Circle": "円"
+                }
+            },
+            "PortraitBorderColor": {
+                "Name": "ポートレート枠の色"
+            },
+            "UseUserColor": {
+                "Name": "ポートレート枠にユーザーの色を使用",
+                "Hint": "枠の色としてユーザーの色を使用します。"
+            },
+            "ChatBorderColor": {
+                "Name": "チャット枠の色"
+            },
+            "UseUserBorder": {
+                "Name": "チャット枠にユーザーの色を使用",
+                "Hint": "チャットメッセージの枠の色にユーザーの色を使用します。"
+            }
+        }
+    }
+}
