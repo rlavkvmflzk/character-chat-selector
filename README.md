@@ -15,7 +15,7 @@ Character Chat Selector enhances Foundry VTT's chat interface by providing a con
 - Custom border colors with user color integration
 
 ## Installation
-1. Copy the manifest URL: `[Module Manifest URL]`
+1. Copy the manifest URL: (https://github.com/rlavkvmflzk/character-chat-selector/releases/latest/download/module.json)
 2. Open Foundry VTT
 3. Navigate to Add-on Modules
 4. Click "Install Module"
