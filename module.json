@@ -1,0 +1,28 @@
+{
+    "id": "character-chat-selector",
+    "title": "Character Chat Selector",
+    "description": "캐릭터를 선택하여 채팅할 수 있는 선택기를 제공합니다.",
+    "version": "1.0.0",
+    "compatibility": {
+      "minimum": "12",
+      "verified": "12"
+    },
+    "authors": [
+      {
+        "name": "Your Name"
+      }
+    ],
+    "esmodules": [
+      "scripts/module.js"
+    ],
+    "styles": [
+      "styles/chatSelector.css"
+    ],
+    "languages": [
+      {
+        "lang": "ko",
+        "name": "한국어",
+        "path": "languages/ko.json"
+      }
+    ]
+  }

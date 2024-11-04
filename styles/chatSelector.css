@@ -1,0 +1,56 @@
+.character-chat-selector {
+    position: relative;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 3px;
+    border-radius: 3px;
+    margin-bottom: 3px;
+    color: white;
+}
+
+.character-select {
+    flex: 1;
+    min-width: 120px;
+    padding: 2px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--color-border-light-tertiary);
+    color: black;
+    font-size: 12px;
+}
+
+.refresh-characters {
+    padding: 2px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--color-border-light-tertiary);
+    color: var(--color-text-light-highlight);
+    font-size: 10px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.refresh-characters:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* 다크 모드 대응 */
+:root[data-theme="dark"] .character-chat-selector {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .character-select,
+:root[data-theme="dark"] .refresh-characters {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+:root[data-theme="dark"] .refresh-characters:hover {
+    background: rgba(0, 0, 0, 0.3);
+}

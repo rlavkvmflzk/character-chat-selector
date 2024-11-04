@@ -1,0 +1,15 @@
+{
+    "CHATSELECTOR": {
+        "Default": "기본",
+        "Settings": {
+            "ShowSelector": {
+                "Name": "채팅 선택기 표시",
+                "Hint": "토큰 선택 없이 캐릭터를 선택하여 채팅할 수 있는 선택기를 표시합니다."
+            },
+            "SpeakAsToken": {
+                "Name": "토큰으로 말하기 모드",
+                "Hint": "활성화하면 선택한 캐릭터의 토큰으로 말하는 것처럼 동작합니다."
+            }
+        }
+    }
+}
