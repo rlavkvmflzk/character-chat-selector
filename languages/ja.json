@@ -24,7 +24,9 @@
                     "Default": "デフォルト",
                     "None": "なし",
                     "Square": "四角",
-                    "Circle": "円"
+                    "Circle": "円",
+                    "minimalist": "ミニマリスト",
+                    "cyber": "サイバーパンク"
                 }
             },
             "PortraitBorderColor": {
@@ -40,6 +42,26 @@
             "UseUserBorder": {
                 "Name": "チャット枠にユーザーの色を使用",
                 "Hint": "チャットメッセージの枠の色にユーザーの色を使用します。"
+            },
+            "UseSecondaryColor": {
+                "Name": "セカンダリカラーを使用",
+                "Hint": "グラデーションやダブル枠にセカンダリカラーを使用します"
+            },
+            "SecondaryColor": {
+                "Name": "セカンダリカラー",
+                "Hint": "グラデーションやダブル枠に使用される色"
+            },
+            "UseGlowEffect": {
+                "Name": "発光エフェクトを使用",
+                "Hint": "枠に発光エフェクトを適用します"
+            },
+            "GlowColor": {
+                "Name": "発光エフェクトの色",
+                "Hint": "発光エフェクトに使用される色"
+            },
+            "GlowStrength": {
+                "Name": "発光エフェクトの強さ",
+                "Hint": "発光エフェクトの強さ (0-20)"
             }
         }
     }

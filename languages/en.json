@@ -24,7 +24,9 @@
                     "Default": "Default",
                     "None": "None",
                     "Square": "Square",
-                    "Circle": "Circle"
+                    "Circle": "Circle",
+                    "minimalist": "minimalist",
+                    "cyber": "Cyberpunk"
                 }
             },
             "PortraitBorderColor": {
@@ -40,6 +42,26 @@
             "UseUserBorder": {
                 "Name": "Use User Color for Chat Border",
                 "Hint": "Uses the user's color as the border color of chat messages.(v12)"
+            },
+            "UseSecondaryColor": {
+                "Name": "Use Secondary Color",
+                "Hint": "Use secondary color for gradients and double borders"
+            },
+            "SecondaryColor": {
+                "Name": "Secondary Color",
+                "Hint": "Color used for gradients and double borders"
+            },
+            "UseGlowEffect": {
+                "Name": "Use Glow Effect",
+                "Hint": "Apply a glowing effect to borders"
+            },
+            "GlowColor": {
+                "Name": "Glow Effect Color",
+                "Hint": "Color used for the glowing effect"
+            },
+            "GlowStrength": {
+                "Name": "Glow Effect Strength",
+                "Hint": "Strength of the glowing effect (0-20)"
             }
         }
     }

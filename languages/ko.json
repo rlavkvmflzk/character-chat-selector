@@ -24,7 +24,9 @@
                     "Default": "기본",
                     "None": "없음",
                     "Square": "사각형",
-                    "Circle": "원형"
+                    "Circle": "원형",
+                    "minimalist": "미니멀리스트",
+                    "cyber": "사이버펑크"
                 }
             },
             "PortraitBorderColor": {
@@ -40,7 +42,27 @@
             "UseUserBorder": {
                 "Name": "채팅 테두리에 사용자 색상 사용",
                 "Hint": "채팅 메시지의 테두리 색상에 사용자의 색상을 사용합니다."
+            },
+            "UseSecondaryColor": {
+                "Name": "보조 색상 사용",
+                "Hint": "그라데이션이나 이중 테두리에 보조 색상을 사용합니다"
+            },
+            "SecondaryColor": {
+                "Name": "보조 색상",
+                "Hint": "그라데이션이나 이중 테두리에 사용될 보조 색상"
+            },
+            "UseGlowEffect": {
+                "Name": "글로우 효과 사용",
+                "Hint": "테두리에 빛나는 효과를 적용합니다"
+            },
+            "GlowColor": {
+                "Name": "글로우 효과 색상",
+                "Hint": "빛나는 효과에 사용될 색상"
+            },
+            "GlowStrength": {
+                "Name": "글로우 효과 강도",
+                "Hint": "빛나는 효과의 강도 (0-20)"
             }
         }
     }
-}
+ }
