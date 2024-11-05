@@ -1,5 +1,12 @@
 import { HpTintEffect } from './hpTintEffect.js';
 
+const DEBUG = false;
+
+// 로그용 유틸리티 함수 추가
+const log = (...args) => {
+    if (DEBUG) log(...args);
+};
+
 export class ChatSelector {
     static SETTINGS = {
         SHOW_SELECTOR: 'showSelector',
