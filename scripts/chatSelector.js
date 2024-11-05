@@ -1,3 +1,5 @@
+import { HpTintEffect } from './hpTintEffect.js';
+
 export class ChatSelector {
     static SETTINGS = {
         SHOW_SELECTOR: 'showSelector',
@@ -5,9 +7,14 @@ export class ChatSelector {
         SHOW_PORTRAIT: 'showPortrait',
         PORTRAIT_SIZE: 'portraitSize',
         PORTRAIT_BORDER: 'portraitBorder',
-        PORTRAIT_BORDER_COLOR: 'portraitBorderColor',
-        USE_USER_COLOR: 'useUserColor',
+        PORTRAIT_BORDER_COLOR: 'portraitBorderColor',  
         USE_USER_BORDER: 'useUserBorder',
+        USE_USER_COLOR: 'useUserColor',
+        USE_SECONDARY_COLOR: 'useSecondaryColor',
+        USE_GLOW_EFFECT: 'useGlowEffect',
+        SECONDARY_COLOR: 'secondaryColor',
+        GLOW_COLOR: 'glowColor',
+        GLOW_STRENGTH: 'glowStrength',
         CHAT_BORDER_COLOR: 'chatBorderColor'
     };
 
@@ -40,6 +47,9 @@ export class ChatSelector {
         Hooks.on('renderChatMessage', (message, html, data) => {
             this._addPortraitToMessage(message, html, data);
         });
+
+        HpTintEffect.initialize();
+        HpTintEffect.injectStyles();
     }
 
     static registerSettings() {
@@ -103,18 +113,12 @@ export class ChatSelector {
                 'none': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.None'),
                 'square': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.Square'),
                 'circle': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.Circle'),
+                'minimalist': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.minimalist'),
+                'cyber': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.cyber')
             },
             default: 'default'
         });
-    
-        game.settings.register('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER_COLOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.PortraitBorderColor.Name'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#000000'
-        });
-    
+
         game.settings.register('character-chat-selector', this.SETTINGS.USE_USER_COLOR, {
             name: game.i18n.localize('CHATSELECTOR.Settings.UseUserColor.Name'),
             hint: game.i18n.localize('CHATSELECTOR.Settings.UseUserColor.Hint'),
@@ -123,15 +127,77 @@ export class ChatSelector {
             type: Boolean,
             default: true
         });
-    
-        game.settings.register('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.ChatBorderColor.Name'),
+
+
+        ColorPicker.register('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER_COLOR, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.PortraitBorderColor.Name'),
             scope: 'client',
             config: true,
-            type: String,
-            default: '#000000'
+            default: '#000000FF',
+        }, {
+            format: 'hexa',
+            alphaChannel: true,
+            preview: true
         });
     
+
+
+        game.settings.register('character-chat-selector', this.SETTINGS.USE_SECONDARY_COLOR, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.UseSecondaryColor.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.UseSecondaryColor.Hint'),
+            scope: 'client',
+            config: true,
+            type: Boolean,
+            default: false
+        });
+        
+        ColorPicker.register('character-chat-selector', this.SETTINGS.SECONDARY_COLOR, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.SecondaryColor.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.SecondaryColor.Hint'),
+            scope: 'client',
+            config: true,
+            default: '#2b2a24FF'
+        }, {
+            format: 'hexa',
+            alphaChannel: true,
+            preview: true
+        });
+        
+        game.settings.register('character-chat-selector', this.SETTINGS.USE_GLOW_EFFECT, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.UseGlowEffect.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.UseGlowEffect.Hint'),
+            scope: 'client',
+            config: true,
+            type: Boolean,
+            default: false
+        });
+        
+        ColorPicker.register('character-chat-selector', this.SETTINGS.GLOW_COLOR, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.GlowColor.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.GlowColor.Hint'),
+            scope: 'client',
+            config: true,
+            default: '#ffffff80'
+        }, {
+            format: 'hexa',
+            alphaChannel: true,
+            preview: true
+        });
+        
+        game.settings.register('character-chat-selector', this.SETTINGS.GLOW_STRENGTH, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.GlowStrength.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.GlowStrength.Hint'),
+            scope: 'client',
+            config: true,
+            type: Number,
+            range: {
+                min: 0,
+                max: 20,
+                step: 1
+            },
+            default: 5
+        });
+
         game.settings.register('character-chat-selector', this.SETTINGS.USE_USER_BORDER, {
             name: game.i18n.localize('CHATSELECTOR.Settings.UseUserBorder.Name'),
             hint: game.i18n.localize('CHATSELECTOR.Settings.UseUserBorder.Hint'),
@@ -140,8 +206,18 @@ export class ChatSelector {
             type: Boolean,
             default: true
         });
+
+        ColorPicker.register('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.ChatBorderColor.Name'),
+            scope: 'client',
+            config: true,
+            default: '#000000FF',
+        }, {
+            format: 'hexa',
+            alphaChannel: true,
+            preview: true
+        });
     }
-    
 
     static _createSelector() {
         console.log("ChatSelector | Creating selector");
@@ -227,21 +303,62 @@ export class ChatSelector {
                 const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
                 const tokenData = actor.prototypeToken;
                 
-                ui.chat.processMessage = function(message) {
+                // 원본 processMessage 함수 보존
+                const originalProcessMessage = ui.chat.processMessage;
+                
+                ui.chat.processMessage = async function(message) {
+                    const speaker = speakAsToken ? {
+                        scene: game.scenes.current?.id,
+                        actor: actor.id,
+                        token: tokenData.id || null,
+                        alias: tokenData.name || actor.name
+                    } : {
+                        scene: game.scenes.current?.id,
+                        actor: actor.id,
+                        token: null,
+                        alias: actor.name
+                    };
+    
+                    // 주사위 명령어 체크
+                    if (message.startsWith('/r') || message.startsWith('/roll')) {
+                        try {
+                            const rollData = message.slice(message.indexOf(' ') + 1);
+                            const roll = await new Roll(rollData).evaluate({async: true});
+                            
+                            // Dice So Nice와 통합
+                            if (game.dice3d) {
+                                await game.dice3d.showForRoll(roll, game.user, true);
+                            }
+    
+                            const chatData = {
+                                user: game.user.id,
+                                speaker: speaker,
+                                type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+                                roll: roll,
+                                rollMode: game.settings.get("core", "rollMode"),
+                                content: await roll.render(),
+                                sound: CONFIG.sounds.dice,
+                                flags: {
+                                    core: {
+                                        initiator: game.user.id,
+                                        canPopout: true
+                                    }
+                                }
+                            };
+    
+                            return ChatMessage.create(chatData);
+                        } catch (err) {
+                            console.error(err);
+                            return originalProcessMessage.call(this, message);
+                        }
+                    }
+                    
+                    // 일반 메시지 처리
                     const chatData = {
                         user: game.user.id,
-                        speaker: speakAsToken ? {
-                            scene: game.scenes.current?.id,
-                            actor: actor.id,
-                            token: tokenData.id || null, 
-                            alias: tokenData.name || actor.name
-                        } : {
-                            scene: game.scenes.current?.id,
-                            actor: actor.id,
-                            token: null,
-                            alias: actor.name
-                        },
+                        speaker: speaker,
                         content: message,
+                        type: CONST.CHAT_MESSAGE_TYPES.IC
                     };
                     return ChatMessage.create(chatData);
                 };
@@ -253,7 +370,6 @@ export class ChatSelector {
             const originalProcessMessage = ui.chat.constructor.prototype.processMessage;
             ui.chat.processMessage = originalProcessMessage;
             delete ChatMessage.implementation.prototype._getChatSpeakerData;
-            
         }
     }
 
@@ -378,205 +494,135 @@ export class ChatSelector {
             return tokenImg;
         }
 
-    static async _addPortraitToMessage(message, html, data) {
-        if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
-    
-        const speaker = message.speaker;
-        if (!speaker) return;
-    
-        const header = html.find('.message-header');
-        if (!header.length) return;
-    
-        const portraitSize = game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_SIZE);
-        const borderStyle = game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER);
-        const useUserColor = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_COLOR);
-        const borderColor = useUserColor ? (message.author?.color || message.user?.color || '#4b4a44') : 
-                           game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER_COLOR);
-        
-        // 이미지 소스 결정 로직
-        let imgSrc;
-        const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
-        
-        console.log("Message speaker:", message.speaker);
-        console.log("Speak as token setting:", speakAsToken);
-        
-        if (speakAsToken) {
-            imgSrc = await this._getMessageImage(message);
-            console.log("Retrieved token image:", imgSrc);
-        }
-        
-        if (!imgSrc) {
-            // speaker의 actor가 없을 때 사용자 아바타로 폴백 설정
-            if (!message.speaker?.actor) {
-                const user = message.author || message.user;  
-                if (user?.avatar) {
-                    imgSrc = user.avatar;
-                } else {
-                }
-            } else {
-                // actor가 있는 경우 actor의 이미지 확인
-                const actor = game.actors.get(message.speaker.actor);
-                imgSrc = actor?.img || 'icons/svg/mystery-man.svg';
-            }
-        }
-    
-        // 초상화 컨테이너 생성
-        const portraitContainer = document.createElement('div');
-        portraitContainer.classList.add('chat-portrait-container');
-        portraitContainer.style.width = `${portraitSize}px`;
-        portraitContainer.style.height = `${portraitSize}px`;
-    
-        // 초상화 이미지 생성
-        const img = document.createElement('img');
-        img.src = imgSrc;
-        img.classList.add('chat-portrait');
-    
-        // 스타일 적용
-        switch (borderStyle) {
-            case 'none':
-                portraitContainer.classList.add('portrait-none');
-                break;
-            case 'square':
-                portraitContainer.classList.add('portrait-square');
-                break;
-            case 'circle':
-                portraitContainer.classList.add('portrait-circle');
-                break;
-            case 'default':
-                portraitContainer.classList.add('portrait-default');
-                break;
-        }
-    
-        if (borderStyle !== 'none') {
-            portraitContainer.style.color = borderColor; 
-        }
-    
-        // 초상화 클릭 이벤트
-        portraitContainer.addEventListener('click', async (event) => {
-            let sheet = null;
-            if (speakAsToken) {
-                const token = await this._getToken(speaker);
-                sheet = token?.actor?.sheet;
-            }
-            if (!sheet) {
-                const actor = game.actors.get(speaker.actor);
-                sheet = actor?.sheet;
-            }
-            sheet?.render(true);
-        });
-    
-        // 이미지를 컨테이너에 추가
-        portraitContainer.appendChild(img);
-        portraitContainer.classList.add('chat-portrait-container');
-        portraitContainer.style.setProperty('--portrait-size', `${portraitSize}px`);  
-    
-        // 메시지에 포트레잇 추가
-        header.prepend(portraitContainer);
+        static async _addPortraitToMessage(message, html, data) {
+            if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
 
+            console.log("Checking message:", {
+                type: message.type,
+                style: message.style,
+                content: message.content,
+                speaker: message.speaker
+            });
+            
+            // 포트레이트를 표시할 메시지 스타일
+            const validStyles = [
+                1,  // 일반 채팅
+                2,  // 귓속말
+                3,  // 굴림
+                4,  // 기타
+            ];
         
-        const useUserBorder = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_BORDER);
-        const chatBorderColor = game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR);
-        const messageElement = html[0];
-        if (useUserBorder) {
-            const userColor = message.author?.color || message.user?.color;
-            console.log('User color:', userColor);
-            if (userColor) {
-                messageElement.style.borderColor = userColor;
-            } else {
-                messageElement.style.borderColor = chatBorderColor;
-            }
-        } else {
-            messageElement.style.borderColor = chatBorderColor;
-        }
-   
-        
-        // CSS 스타일 추가
-        if (!document.querySelector('#chat-portrait-styles')) {
-            const style = document.createElement('style');
-            style.id = 'chat-portrait-styles';
-            style.textContent = `
-            .chat-portrait-container {
-                position: relative;
-                margin-right: 8px;
-                flex: 0 0 auto;
-                overflow: hidden;
-                transition: all 0.2s ease;
-                width: var(--portrait-size);
-                height: var(--portrait-size);
-            }
-        
-            .chat-portrait {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-        
-            /* 기본 상태 */
-            .portrait-default {
-                border: 1px solid currentColor;
-                border-radius: 10%;
-            }
-        
-            /* 사각형 */
-            .portrait-square {
-                border: 2px solid currentColor;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            }
-        
-            /* 원형 */
-            .portrait-circle {
-                border: 2px solid currentColor;
-                border-radius: 50%;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                overflow: hidden;
-            }
-        
-            /* 테두리 없음 */
-            .portrait-none {
-                border: none;
-                box-shadow: none;
-            }
-        
-            .chat-portrait-container:hover {
-                transform: scale(1.05);
-                box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-                cursor: pointer;
-            }
-        
-            .message {
-                position: relative;
-            }
-        
-            .message::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                pointer-events: none;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-                border-radius: inherit;
-            }
-        
-            .message-header {
-                display: flex;
-                align-items: center;
-                padding: 5px;
-                background: rgba(255, 255, 255, 0.05);
+            // 설정이 꺼져있거나 유효하지 않은 메시지 스타일이면 중단
+            if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) {
+                console.log("Portrait display is disabled");
+                return;
             }
             
-            .chat-portrait-container img {
-                image-rendering: auto;
-                width: 100%;
-                height: 100%;
-                border: none;  
+            if (!validStyles.includes(message.style)) {
+                console.log("Invalid message style:", message.style);
+                return;
             }
-        `;        
-            document.head.appendChild(style);
-        }
-    }
+        
+            const speaker = message.speaker;
+            if (!speaker) {
+                console.log("No speaker found");
+                return;
+            }
+         
+            const header = html.find('.message-header');
+            if (!header.length) return;
+         
+            // 설정값 가져오기
+            const portraitSize = game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_SIZE);
+            const borderStyle = game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER);
+            const useUserColor = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_COLOR);
+            const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
+         
+            // 이미지 소스 가져오기
+            console.log("Message speaker:", message.speaker);
+            console.log("Speak as token setting:", speakAsToken);
+            
+            const imgSrc = await this._getMessageImage(message);
+            if (!imgSrc) return;
+         
+            // 초상화 컨테이너 생성
+            const portraitContainer = document.createElement('div');
+            portraitContainer.classList.add('chat-portrait-container');
+            portraitContainer.style.setProperty('--portrait-size', `${portraitSize}px`);
+         
+            // 초상화 이미지 생성
+            const img = document.createElement('img');
+            img.src = imgSrc;
+            img.classList.add('chat-portrait');
+         
+            // 스타일 적용
+            portraitContainer.classList.add(`portrait-${borderStyle}`);
+         
+            // CSS 변수 설정
+            const primaryColor = useUserColor ? 
+                (message.author?.color || message.user?.color || '#4b4a44') : 
+                game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER_COLOR);
+            
+            const useSecondaryColor = game.settings.get('character-chat-selector', this.SETTINGS.USE_SECONDARY_COLOR);
+            const useGlowEffect = game.settings.get('character-chat-selector', this.SETTINGS.USE_GLOW_EFFECT);
+         
+            portraitContainer.style.setProperty('--primary-color', primaryColor);
+            portraitContainer.style.setProperty('--secondary-color', useSecondaryColor ? 
+                game.settings.get('character-chat-selector', this.SETTINGS.SECONDARY_COLOR) : primaryColor);
+            portraitContainer.style.setProperty('--glow-color', useGlowEffect ? 
+                game.settings.get('character-chat-selector', this.SETTINGS.GLOW_COLOR) : 'transparent');
+            portraitContainer.style.setProperty('--glow-strength', useGlowEffect ? 
+                `${game.settings.get('character-chat-selector', this.SETTINGS.GLOW_STRENGTH)}px` : '0');
+         
+            // 이벤트 리스너 추가
+            portraitContainer.addEventListener('click', async () => {
+                let sheet = null;
+                if (speakAsToken) {
+                    const token = await this._getToken(speaker);
+                    sheet = token?.actor?.sheet;
+                }
+                if (!sheet) {
+                    const actor = game.actors.get(speaker.actor);
+                    sheet = actor?.sheet;
+                }
+                sheet?.render(true);
+            });
+         
+            // 이미지를 컨테이너에 추가
+            portraitContainer.appendChild(img);
+         
+            // 메시지에 포트레잇 추가
+            header.prepend(portraitContainer);
+         
+            // 채팅 메시지 테두리 색상
+            const useUserBorder = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_BORDER);
+            const chatBorderColor = useUserBorder ? 
+                (message.author?.color || message.user?.color || game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR)) : 
+                game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR);
+         
+            const messageElement = html[0];
+            messageElement.style.borderColor = chatBorderColor;
+         
+            // HP Tint Effect 설정
+            const hookId = HpTintEffect.applyTintToPortrait(portraitContainer, message);
+            
+            // 메시지가 삭제될 때 훅 정리
+            if (hookId) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (!document.contains(messageElement)) {
+                            Hooks.off('updateActor', hookId);
+                            observer.disconnect();
+                        }
+                    });
+                });
+         
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+         }
 
     static _getToken(speaker) {
         if (!speaker.token) return null;
