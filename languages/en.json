@@ -62,6 +62,22 @@
             "GlowStrength": {
                 "Name": "Glow Effect Strength",
                 "Hint": "Strength of the glowing effect (0-20)"
+            },
+            "UseHpTint": {
+                "Name": "Show HP Status",
+                "Hint": "Portrait becomes redder as HP decreases"
+            },
+            "HpTintIntensity": {
+                "Name": "HP Status Intensity",
+                "Hint": "Sets the intensity of the red tint for HP status"
+            },
+            "HpCurrentPath": {
+                "Name": "Current HP Path",
+                "Hint": "Enter the actor data path where current HP is stored"
+            },
+            "HpMaxPath": {
+                "Name": "Maximum HP Path",
+                "Hint": "Enter the actor data path where maximum HP is stored"
             }
         }
     }

@@ -62,6 +62,22 @@
             "GlowStrength": {
                 "Name": "発光エフェクトの強さ",
                 "Hint": "発光エフェクトの強さ (0-20)"
+            },
+            "UseHpTint": {
+                "Name": "HP状態表示",
+                "Hint": "HPが低くなるほどポートレートが赤く変化します"
+            },
+            "HpTintIntensity": {
+                "Name": "HP状態表示の強度",
+                "Hint": "HP状態表示の赤色の強度を設定します"
+            },
+            "HpCurrentPath": {
+                "Name": "現在HP経路",
+                "Hint": "現在のHP値が保存されているactorデータの経路を入力してください"
+            },
+            "HpMaxPath": {
+                "Name": "最大HP経路",
+                "Hint": "最大HP値が保存されているactorデータの経路を入力してください"
             }
         }
     }
