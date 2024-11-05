@@ -53,3 +53,151 @@
 :root[data-theme="dark"] .refresh-characters:hover {
     background: rgba(0, 0, 0, 0.3);
 }
+
+/* 초상화 컨테이너 기본 스타일 */
+.chat-portrait-container {
+    position: relative;
+    margin-right: 8px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    width: var(--portrait-size);
+    height: var(--portrait-size);
+}
+
+.chat-portrait {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 기본 스타일 */
+.portrait-default {
+    border: 1px solid var(--primary-color);
+    border-radius: 15%;
+    box-shadow: 0 0 var(--glow-strength) var(--glow-color);
+}
+
+/* 사각형 스타일 */
+.portrait-square {
+    position: relative;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 var(--glow-strength) var(--glow-color);
+}
+
+/* 테두리 없음 */
+.portrait-none {
+    border: none;
+    box-shadow: none;
+}
+
+.portrait-square::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        var(--primary-color)20, 
+        var(--secondary-color)20
+    );
+    opacity: var(--use-secondary-color, 0);
+    pointer-events: none;
+}
+
+/* 원형 스타일 */
+.portrait-circle {
+    position: relative;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    box-shadow: 0 0 var(--glow-strength) var(--glow-color);
+    overflow: hidden;
+}
+
+.portrait-circle::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    background: linear-gradient(45deg, 
+        var(--primary-color)20, 
+        var(--secondary-color)20
+    );
+    opacity: var(--use-secondary-color, 0);
+    pointer-events: none;
+}
+
+/* 미니멀리스트 스타일 */
+.portrait-minimalist {
+    border: 2px solid var(--primary-color);
+    background: white;
+    box-shadow: 5px 5px 0 var(--secondary-color);
+    transform: rotate(-2deg);
+}
+
+/* 사이버펑크 스타일 */
+.portrait-cyber {
+    position: relative;
+    border: 3px solid var(--primary-color);
+    clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
+    box-shadow: 0 0 var(--glow-strength) var(--glow-color);
+}
+
+.portrait-cyber::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        var(--primary-color)20, 
+        var(--secondary-color)20
+    );
+    opacity: var(--use-secondary-color, 0);
+    pointer-events: none;
+}
+
+/* 호버 효과 */
+.chat-portrait-container:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 calc(var(--glow-strength) * 1.5) var(--glow-color);
+    cursor: pointer;
+}
+
+/* 메시지 스타일 */
+.message {
+    position: relative;
+    border-color: var(--chat-border-color);
+}
+
+.message::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    border-radius: inherit;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.chat-portrait-container img {
+    image-rendering: auto;
+    width: 100%;
+    height: 100%;
+    border: none;  
+}
