@@ -26,11 +26,11 @@ export class ChatSelector {
     };
 
     static initialize() {
-        console.log("ChatSelector | Initializing...");
+        log("ChatSelector | Initializing...");
         this.registerSettings();
         
         Hooks.once('ready', () => {
-            console.log("ChatSelector | Ready hook fired");
+            log("ChatSelector | Ready hook fired");
             if (game.settings.get('character-chat-selector', this.SETTINGS.SHOW_SELECTOR)) {
                 this._createSelector();
             }
@@ -38,15 +38,15 @@ export class ChatSelector {
 
         // 액터 변경 감지
         Hooks.on('createActor', () => {
-            console.log("ChatSelector | Actor created");
+            log("ChatSelector | Actor created");
             this._updateCharacterList();
         });
         Hooks.on('deleteActor', () => {
-            console.log("ChatSelector | Actor deleted");
+            log("ChatSelector | Actor deleted");
             this._updateCharacterList();
         });
         Hooks.on('updateActor', () => {
-            console.log("ChatSelector | Actor updated");
+            log("ChatSelector | Actor updated");
             this._updateCharacterList();
         });
 
@@ -60,7 +60,7 @@ export class ChatSelector {
     }
 
     static registerSettings() {
-        console.log("ChatSelector | Registering settings");
+        log("ChatSelector | Registering settings");
         game.settings.register('character-chat-selector', this.SETTINGS.SHOW_SELECTOR, {
             name: game.i18n.localize('CHATSELECTOR.Settings.ShowSelector.Name'),
             hint: game.i18n.localize('CHATSELECTOR.Settings.ShowSelector.Hint'),
@@ -227,7 +227,7 @@ export class ChatSelector {
     }
 
     static _createSelector() {
-        console.log("ChatSelector | Creating selector");
+        log("ChatSelector | Creating selector");
         const chatControls = document.querySelector("#chat-controls");
         if (!chatControls) {
             console.error("ChatSelector | Chat controls not found");
@@ -235,12 +235,12 @@ export class ChatSelector {
         }
         
         if (document.querySelector('.character-chat-selector')) {
-            console.log("ChatSelector | Selector already exists");
+            log("ChatSelector | Selector already exists");
             return;
         }
 
         const currentSpeaker = ChatMessage.getSpeaker();
-        console.log("ChatSelector | Current speaker:", currentSpeaker);
+        log("ChatSelector | Current speaker:", currentSpeaker);
 
         const selectorHtml = `
             <div class="character-chat-selector">
@@ -259,7 +259,7 @@ export class ChatSelector {
     }
 
     static _getCharacterOptions(currentActorId) {
-        console.log("ChatSelector | Getting character options, current actor:", currentActorId);
+        log("ChatSelector | Getting character options, current actor:", currentActorId);
         
         const actors = game.actors.filter(actor => {
             // GM은 모든 액터를 볼 수 있음
@@ -279,20 +279,20 @@ export class ChatSelector {
     }
 
     static _addEventListeners() {
-        console.log("ChatSelector | Adding event listeners");
+        log("ChatSelector | Adding event listeners");
         const select = document.querySelector('.character-select');
         const refreshButton = document.querySelector('.refresh-characters');
 
         if (select) {
             select.addEventListener('change', (event) => {
-                console.log("ChatSelector | Selection changed:", event.target.value);
+                log("ChatSelector | Selection changed:", event.target.value);
                 this._onCharacterSelect(event);
             });
         }
 
         if (refreshButton) {
             refreshButton.addEventListener('click', () => {
-                console.log("ChatSelector | Refresh clicked");
+                log("ChatSelector | Refresh clicked");
                 this._updateCharacterList();
             });
         }
@@ -300,12 +300,12 @@ export class ChatSelector {
 
     static _onCharacterSelect(event) {
         const actorId = event.target.value;
-        console.log("ChatSelector | Character selected:", actorId);
+        log("ChatSelector | Character selected:", actorId);
     
         if (actorId) {
             const actor = game.actors.get(actorId);
             if (actor) {
-                console.log("ChatSelector | Setting speaker to:", actor.name);
+                log("ChatSelector | Setting speaker to:", actor.name);
                 
                 const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
                 const tokenData = actor.prototypeToken;
@@ -371,7 +371,7 @@ export class ChatSelector {
                 };
             }
         } else {
-            console.log("ChatSelector | Resetting to default");
+            log("ChatSelector | Resetting to default");
             
             // 기본 상태로 완전히 복구
             const originalProcessMessage = ui.chat.constructor.prototype.processMessage;
@@ -381,7 +381,7 @@ export class ChatSelector {
     }
 
     static _updateCharacterList() {
-        console.log("ChatSelector | Updating character list");
+        log("ChatSelector | Updating character list");
         const select = document.querySelector('.character-select');
         if (!select) {
             console.error("ChatSelector | Select element not found");
@@ -397,29 +397,29 @@ export class ChatSelector {
     }
 
     static updateSelector() {
-        console.log("ChatSelector | Updating selector");
+        log("ChatSelector | Updating selector");
         const existingSelector = document.querySelector('.character-chat-selector');
         if (existingSelector) {
-            console.log("ChatSelector | Removing existing selector");
+            log("ChatSelector | Removing existing selector");
             existingSelector.remove();
         }
 
         if (game.settings.get('character-chat-selector', this.SETTINGS.SHOW_SELECTOR)) {
-            console.log("ChatSelector | Creating new selector");
+            log("ChatSelector | Creating new selector");
             this._createSelector();
         }
     }
 
     static async _getMessageImage(message) {
-        console.log("_getMessageImage 시작:", message);
+        log("_getMessageImage 시작:", message);
     
         // 화자가 선택되어 있지 않은 경우 (기본 상태)
         if (!message.speaker?.actor) {
             const user = message.author || message.user;
-            console.log("사용자 정보:", user);
+            log("사용자 정보:", user);
     
             if (user?.avatar) {
-                console.log("사용자 아바타 반환:", user.avatar);
+                log("사용자 아바타 반환:", user.avatar);
                 return user.avatar;
             } else {
                 console.warn("사용자 아바타를 찾을 수 없음:", message.author);
@@ -428,45 +428,45 @@ export class ChatSelector {
     
         // 토큰 모드로 설정된 경우
         const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
-        console.log("토큰으로 말하기 모드:", speakAsToken);
+        log("토큰으로 말하기 모드:", speakAsToken);
     
         if (speakAsToken) {
             const tokenImg = await this._getTokenImage(message.speaker);
-            console.log("토큰 이미지 검색 결과:", tokenImg);
+            log("토큰 이미지 검색 결과:", tokenImg);
     
             if (tokenImg) return tokenImg;
         }
     
         // 선택된 액터의 이미지
         const actor = game.actors.get(message.speaker.actor);
-        console.log("선택된 액터:", actor);
+        log("선택된 액터:", actor);
     
         if (actor?.img) {
-            console.log("액터 이미지 반환:", actor.img);
+            log("액터 이미지 반환:", actor.img);
             return actor.img;
         }
     
         // 모든 것이 실패하면 플레이어 아바타로 폴백
         const fallbackAvatar = game.users.get(message.author || message.user)?.avatar || 'icons/svg/mystery-man.svg';
-        console.log("폴백 아바타:", fallbackAvatar);
+        log("폴백 아바타:", fallbackAvatar);
         return fallbackAvatar;
     }
 
     static async _getTokenImage(speaker) {
-        console.log("Getting token image for speaker:", speaker);
+        log("Getting token image for speaker:", speaker);
         
         let tokenImg = null;
         
         // 1. 실제 토큰 확인
         if (speaker.token) {
-            console.log("Speaker has token ID:", speaker.token);
+            log("Speaker has token ID:", speaker.token);
             
             // 현재 씬의 활성 토큰 확인
             const activeToken = canvas.tokens?.placeables.find(t => t.id === speaker.token);
             if (activeToken) {
-                console.log("Found active token:", activeToken);
+                log("Found active token:", activeToken);
                 tokenImg = activeToken.document.texture.src || activeToken.document.img;
-                console.log("Active token image:", tokenImg);
+                log("Active token image:", tokenImg);
             }
     
             // 지정된 씬의 토큰 확인
@@ -475,9 +475,9 @@ export class ChatSelector {
                 if (scene) {
                     const tokenDoc = scene.tokens.get(speaker.token);
                     if (tokenDoc) {
-                        console.log("Found token document:", tokenDoc);
+                        log("Found token document:", tokenDoc);
                         tokenImg = tokenDoc.texture?.src || tokenDoc.img;
-                        console.log("Token document image:", tokenImg);
+                        log("Token document image:", tokenImg);
                     }
                 }
             }
@@ -485,26 +485,26 @@ export class ChatSelector {
     
    // 2. 프로토타입 토큰 이미지 확인
             if (!tokenImg && speaker.actor) {
-                console.log("Checking prototype token for actor:", speaker.actor);
+                log("Checking prototype token for actor:", speaker.actor);
                 const actor = game.actors.get(speaker.actor);
                 if (actor) {
                     const prototypeToken = actor.prototypeToken;
                     if (prototypeToken) {
-                        console.log("Found prototype token:", prototypeToken);
+                        log("Found prototype token:", prototypeToken);
                         tokenImg = prototypeToken.texture?.src || prototypeToken.img || actor.img;
-                        console.log("Prototype token image:", tokenImg);
+                        log("Prototype token image:", tokenImg);
                     }
                 }
             }
 
-            console.log("Final token image result:", tokenImg);
+            log("Final token image result:", tokenImg);
             return tokenImg;
         }
 
         static async _addPortraitToMessage(message, html, data) {
             if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
 
-            console.log("Checking message:", {
+            log("Checking message:", {
                 type: message.type,
                 style: message.style,
                 content: message.content,
@@ -521,18 +521,18 @@ export class ChatSelector {
         
             // 설정이 꺼져있거나 유효하지 않은 메시지 스타일이면 중단
             if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) {
-                console.log("Portrait display is disabled");
+                log("Portrait display is disabled");
                 return;
             }
             
             if (!validStyles.includes(message.style)) {
-                console.log("Invalid message style:", message.style);
+                log("Invalid message style:", message.style);
                 return;
             }
         
             const speaker = message.speaker;
             if (!speaker) {
-                console.log("No speaker found");
+                log("No speaker found");
                 return;
             }
          
@@ -546,8 +546,8 @@ export class ChatSelector {
             const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
          
             // 이미지 소스 가져오기
-            console.log("Message speaker:", message.speaker);
-            console.log("Speak as token setting:", speakAsToken);
+            log("Message speaker:", message.speaker);
+            log("Speak as token setting:", speakAsToken);
             
             const imgSrc = await this._getMessageImage(message);
             if (!imgSrc) return;
