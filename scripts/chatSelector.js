@@ -532,22 +532,19 @@ export class ChatSelector {
 
         static async _addPortraitToMessage(message, html, data) {
             if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
+
+            const isV12 = game.version && Number(game.version.split('.')[0]) >= 12;
             
-            // 포트레이트를 표시할 메시지 스타일
-            const validStyles = [
-                0,  // 굴림
-                1,  // 일반 채팅
-                2,  // 귓속말
-                3,  // 이모트
-                4,  // 기타
-            ];
+            const messageStyle = isV12 ? message.style : message.type;
+            const validStyles = [0, 1, 2, 3, 4];
+            
+            console.log("Message style/type check:", {
+                value: messageStyle,
+                isValid: validStyles.includes(messageStyle)
+            });
         
-            // 설정이 꺼져있거나 유효하지 않은 메시지 스타일이면 중단
-            if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) {
-                return;
-            }
-            
-            if (!validStyles.includes(message.style)) {
+            if (!validStyles.includes(messageStyle)) {
+                console.log("Invalid message style/type, stopping portrait addition");
                 return;
             }
         
