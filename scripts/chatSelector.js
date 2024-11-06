@@ -17,7 +17,8 @@ export class ChatSelector {
         GLOW_COLOR: 'glowColor',
         GLOW_STRENGTH: 'glowStrength',
         CHAT_BORDER_COLOR: 'chatBorderColor',
-        HIDE_DND5E_PORTRAIT: 'hideDnd5ePortrait'
+        HIDE_DND5E_PORTRAIT: 'hideDnd5ePortrait',
+        ALLOWED_MODULE_FLAGS: 'allowedModuleFlags',
     };
 
     static initialize() {
@@ -268,6 +269,18 @@ export class ChatSelector {
             onChange: () => {
                 // 설정 변경 시 채팅 메시지 스타일 업데이트
                 this._updateChatStyles();
+            }
+        });
+
+        game.settings.register('character-chat-selector', this.SETTINGS.ALLOWED_MODULE_FLAGS, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.AllowedModuleFlags.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.AllowedModuleFlags.Hint'),
+            scope: 'client',
+            config: true,
+            type: String,
+            default: 'foundryvtt-simple-calendar',
+            onChange: () => {
+                ui.notifications.warn(game.i18n.localize('CHATSELECTOR.Settings.ReloadRequired'), {permanent: true});
             }
         });
     }
@@ -603,15 +616,35 @@ export class ChatSelector {
         static async _addPortraitToMessage(message, html, data) {
             if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
 
-            // 다른 모듈에서 생성된 메시지인지 확인
-            if (message.flags && Object.keys(message.flags).some(flag => 
-                flag !== 'core' && 
-                flag !== 'character-chat-selector'
-            )) {
-                return; // 다른 모듈의 플래그가 있으면 포트레잇 추가하지 않음
-            }
+            console.log("Message details:", {
+                style: message.style,
+                type: message.type,
+                flags: message.flags,
+                content: message.content,
+                command: message?.flags?.core?.command
+            });
 
             const messageStyle = game.version.startsWith('12') ? message.style : message.type;
+
+                // 허용된 모듈 플래그 목록 가져오기
+            const allowedFlags = game.settings
+                .get('character-chat-selector', this.SETTINGS.ALLOWED_MODULE_FLAGS)
+                .split(',')
+                .map(flag => flag.trim());
+
+            // 메시지에 플래그가 있는지 확인하고, 허용되지 않은 모듈의 플래그인 경우 포트레잇 추가하지 않음
+            if (message.flags) {
+                const messageFlags = Object.keys(message.flags).filter(flag => 
+                    flag !== 'core' && 
+                    flag !== 'character-chat-selector'
+                );
+                
+                // 허용되지 않은 모듈의 플래그가 있는 경우 포트레잇 추가하지 않음
+                if (messageFlags.length > 0 && 
+                    !messageFlags.some(flag => allowedFlags.includes(flag))) {
+                    return;
+                }
+            }
 
             // 모듈에서 처리하는 메시지 타입인지 확인
             const isOurMessage = 
