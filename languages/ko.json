@@ -62,7 +62,27 @@
             "GlowStrength": {
                 "Name": "글로우 효과 강도",
                 "Hint": "빛나는 효과의 강도 (0-20)"
+            },
+            "UseHpTint": {
+                "Name": "HP 상태 표시",
+                "Hint": "HP가 낮아질수록 초상화가 붉게 변합니다"
+            },
+            "HpTintIntensity": {
+                "Name": "HP 상태 표시 강도",
+                "Hint": "HP 상태 표시의 붉은색 강도를 설정합니다"
+            },
+            "HpCurrentPath": {
+                "Name": "현재 HP 경로",
+                "Hint": "현재 HP값이 저장된 actor 데이터의 경로를 입력하세요"
+            },
+            "HpMaxPath": {
+                "Name": "최대 HP 경로",
+                "Hint": "최대 HP값이 저장된 actor 데이터의 경로를 입력하세요"
+            },
+            "HidePortrait": {
+                "Name": "D&D5e 초상화 숨기기",
+                "Hint": "기본 D&D5e 채팅 초상화를 숨깁니다. 채팅 선택기 모듈과 함께 사용할 때 초상화가 중복되는 것을 방지합니다."
             }
         }
     }
- }
+}
