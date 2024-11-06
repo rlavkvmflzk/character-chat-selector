@@ -83,6 +83,13 @@
             "Name": "Hide D&D5e Portrait",
             "Hint": "Hides the default D&D5e chat portrait when enabled. This helps avoid duplicate portraits when using the Chat Selector module."
             }
+        },
+        "Warnings": {
+            "NoName": "Please enter a character name.",
+            "NoMatch": "No matching character found."
+        },
+        "Info": {
+            "CharacterChanged": "Character changed to {name}."
         }
     }
 }
