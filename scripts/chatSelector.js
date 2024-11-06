@@ -603,14 +603,15 @@ export class ChatSelector {
         static async _addPortraitToMessage(message, html, data) {
             if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
 
-            const messageStyle = game.version.startsWith('12') ? message.style : message.type;
+            // 다른 모듈에서 생성된 메시지인지 확인
+            if (message.flags && Object.keys(message.flags).some(flag => 
+                flag !== 'core' && 
+                flag !== 'character-chat-selector'
+            )) {
+                return; // 다른 모듈의 플래그가 있으면 포트레잇 추가하지 않음
+            }
 
-            const isNarratorMessage = 
-            message.flags?.["narrator-tools"]?.type === "description" ||
-            message.flags?.["narrator-tools"]?.type === "narration" ||
-            message.flags?.["cgmp"]?.subType === 1;
-    
-            if (isNarratorMessage) return;
+            const messageStyle = game.version.startsWith('12') ? message.style : message.type;
 
             // 모듈에서 처리하는 메시지 타입인지 확인
             const isOurMessage = 
