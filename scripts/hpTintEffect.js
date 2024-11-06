@@ -18,7 +18,7 @@ export class HpTintEffect {
             scope: 'client',
             config: true,
             type: Boolean,
-            default: true
+            default: false
         });
 
         game.settings.register('character-chat-selector', this.SETTINGS.HP_TINT_INTENSITY, {
