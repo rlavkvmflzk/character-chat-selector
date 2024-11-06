@@ -37,7 +37,7 @@ export class ChatSelector {
                         messageText.slice(1).trim();
                     
                     if (!searchTerm) {
-                        ui.notifications.warn("캐릭터 이름을 입력해주세요.");
+                        ui.notifications.warn(game.i18n.localize("CHATSELECTOR.Warnings.NoName"));
                         return false;
                     }
     
@@ -57,9 +57,11 @@ export class ChatSelector {
                             select.dispatchEvent(event);
                         }
     
-                        ui.notifications.info(`캐릭터가 ${bestMatch.name}로 변경되었습니다.`);
+                        ui.notifications.info(game.i18n.format("CHATSELECTOR.Info.CharacterChanged", {
+                            name: bestMatch.name
+                        }));
                     } else {
-                        ui.notifications.warn("일치하는 캐릭터를 찾을 수 없습니다.");
+                        ui.notifications.warn(game.i18n.localize("CHATSELECTOR.Warnings.NoMatch"));
                     }
     
                     return false; // 채팅에 기본 출력 방지
