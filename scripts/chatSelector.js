@@ -20,11 +20,50 @@ export class ChatSelector {
 
     static initialize() {
         this.registerSettings();
-        
+
         Hooks.once('ready', () => {
             if (game.settings.get('character-chat-selector', this.SETTINGS.SHOW_SELECTOR)) {
                 this._createSelector();
             }
+
+            // 캐릭터 이름으로 찾기 시작
+            Hooks.on("chatMessage", (chatLog, messageText, chatData) => {
+                if (messageText.startsWith("/c") || messageText.startsWith("!")) {
+                    const isSlashCommand = messageText.startsWith("/c");
+                    const searchTerm = isSlashCommand ? 
+                        messageText.slice(2).trim() : 
+                        messageText.slice(1).trim();
+                    
+                    if (!searchTerm) {
+                        ui.notifications.warn("캐릭터 이름을 입력해주세요.");
+                        return false;
+                    }
+    
+                    const availableActors = game.actors.filter(actor => {
+                        if (game.user.isGM) return true;
+                        return actor.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
+                    });
+    
+                    const bestMatch = this._findBestMatch(searchTerm, availableActors);
+    
+                    if (bestMatch) {
+                        const select = document.querySelector('.character-select');
+                        if (select) {
+                            select.value = bestMatch.id;
+                            
+                            const event = new Event('change');
+                            select.dispatchEvent(event);
+                        }
+    
+                        ui.notifications.info(`캐릭터가 ${bestMatch.name}로 변경되었습니다.`);
+                    } else {
+                        ui.notifications.warn("일치하는 캐릭터를 찾을 수 없습니다.");
+                    }
+    
+                    return false; // 채팅에 기본 출력 방지
+                }
+                return true;
+            });
         });
 
         // 액터 변경 감지
@@ -213,8 +252,6 @@ export class ChatSelector {
         });
     }
 
-    
-
     static _createSelector() {
         const chatControls = document.querySelector("#chat-controls");
         if (!chatControls) {
@@ -281,113 +318,123 @@ export class ChatSelector {
         }
     }
 
-    static _onCharacterSelect(event) {
+    static async _onCharacterSelect(event) {
         const actorId = event.target.value;
-    
+        
         if (actorId) {
             const actor = game.actors.get(actorId);
-            if (actor) {                
-                const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
-                const tokenData = actor.prototypeToken;
-                
-                const originalProcessMessage = ui.chat.processMessage;
+            if (!actor) return;
+            
+            const speakAsToken = game.settings.get('character-chat-selector', 'speakAsToken');
+            const tokenData = actor.prototypeToken;
+            
+            const originalProcessMessage = ui.chat.processMessage;
+            
+            ui.chat.processMessage = async function(message) {
+                if (message.startsWith("/c") || message.startsWith("!")) {
+                    return ChatLog.prototype.processMessage.call(this, message);
+                }
 
-                ui.chat.processMessage = async function(message) {
-                    // OOC
-                    if (message.startsWith('/ooc ')) {
-                        const oocText = message.slice(5);
-                        return ChatMessage.create({
-                            user: game.user.id,
-                            content: oocText,
-                            type: CONST.CHAT_MESSAGE_TYPES.OOC
-                        });
-                    }
+                const speaker = speakAsToken ? {
+                    scene: game.scenes.current?.id,
+                    actor: actor.id,
+                    token: tokenData.id || null,
+                    alias: tokenData.name || actor.name
+                } : {
+                    scene: game.scenes.current?.id,
+                    actor: actor.id,
+                    token: null,
+                    alias: actor.name
+                };
     
-                    // 귓속말
-                    if (message.startsWith('/w ') || message.startsWith('/whisper ')) {
-                        const parts = message.slice(message.indexOf(' ') + 1).split(' ');
-                        const target = parts[0];
-                        const whisperText = parts.slice(1).join(' ');
-                        return ChatMessage.create({
-                            user: game.user.id,
-                            content: whisperText,
-                            type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
-                            whisper: game.users.filter(u => u.name === target).map(u => u.id)
-                        });
-                    }    
-
-                    // GM에게 귓속말
-                    if (message.startsWith('/gm ')) {
-                        const gmText = message.slice(4);
-                        return ChatMessage.create({
-                            user: game.user.id,
-                            content: gmText,
-                            type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
-                            whisper: game.users.filter(u => u.isGM).map(u => u.id)
-                        });
-                    }
-                    
-                    const speaker = speakAsToken ? {
-                        scene: game.scenes.current?.id,
-                        actor: actor.id,
-                        token: tokenData.id || null,
-                        alias: tokenData.name || actor.name
-                    } : {
-                        scene: game.scenes.current?.id,
-                        actor: actor.id,
-                        token: null,
-                        alias: actor.name
-                    };
+                if (message.startsWith('/ooc ')) {
+                    const oocText = message.slice(5);
+                    return ChatMessage.create({
+                        user: game.user.id,
+                        content: oocText,
+                        type: CONST.CHAT_MESSAGE_TYPES.OOC
+                    });
+                }
     
-                    // 이모트
-                    if (message.startsWith('/emote ') || message.startsWith('/em ')) {
-                        const emoteText = message.slice(message.indexOf(' ') + 1);
-                        return ChatMessage.create({
-                            user: game.user.id,
-                            speaker: speaker,
-                            content: emoteText,
-                            type: CONST.CHAT_MESSAGE_TYPES.EMOTE
-                        });
-                    }
-
-                // 주사위 굴림
+                if (message.startsWith('/w ') || message.startsWith('/whisper ')) {
+                    const parts = message.slice(message.indexOf(' ') + 1).split(' ');
+                    const target = parts[0];
+                    const whisperText = parts.slice(1).join(' ');
+                    return ChatMessage.create({
+                        user: game.user.id,
+                        content: whisperText,
+                        type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
+                        whisper: game.users.filter(u => u.name === target).map(u => u.id)
+                    });
+                }
+    
+                if (message.startsWith('/gm ')) {
+                    const gmText = message.slice(4);
+                    return ChatMessage.create({
+                        user: game.user.id,
+                        content: gmText,
+                        type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
+                        whisper: game.users.filter(u => u.isGM).map(u => u.id)
+                    });
+                }
+    
+                if (message.startsWith('/emote ') || message.startsWith('/em ') || message.startsWith('/me ')) {
+                    const cmdLength = message.startsWith('/emote ') ? 7 : 4;
+                    const emoteText = message.slice(cmdLength);
+                    return ChatMessage.create({
+                        user: game.user.id,
+                        speaker: speaker,
+                        content: `${speaker.alias} ${emoteText}`,
+                        type: CONST.CHAT_MESSAGE_TYPES.EMOTE
+                    });
+                }
+    
                 if (message.startsWith('/r') || message.startsWith('/roll') || 
-                    message.startsWith('/gmroll ') || message.startsWith('/gr ') ||
-                    message.startsWith('/blindroll ') || message.startsWith('/br ') ||
-                    message.startsWith('/selfroll ') || message.startsWith('/sr ')) {
-                    try {
-                        let rollMode = "roll";
-                        let whisperIds = [];
-                        
-                        if (message.startsWith('/gmroll ') || message.startsWith('/gr ')) {
-                            rollMode = "gmroll";
-                            whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
-                        } else if (message.startsWith('/blindroll ') || message.startsWith('/br ')) {
-                            rollMode = "blindroll";
-                            whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
-                        } else if (message.startsWith('/selfroll ') || message.startsWith('/sr ')) {
-                            rollMode = "selfroll";
-                            whisperIds = [game.user.id];
-                        } else {
-                            rollMode = game.settings.get("core", "rollMode");
-                            switch (rollMode) {
-                                case "gmroll":
-                                case "blindroll":
-                                    whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
-                                    break;
-                                case "selfroll":
-                                    whisperIds = [game.user.id];
-                                    break;
-                            }
+                message.startsWith('/gmroll ') || message.startsWith('/gr ') ||
+                message.startsWith('/blindroll ') || message.startsWith('/br ') ||
+                message.startsWith('/selfroll ') || message.startsWith('/sr ')) {
+                try {
+                    let rollMode = "roll";
+                    let whisperIds = [];
+                    let rollData = "";
+                    
+                    if (message.startsWith('/gmroll ') || message.startsWith('/gr ')) {
+                        rollMode = "gmroll";
+                        whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
+                        rollData = message.startsWith('/gr ') ? message.slice(4) : message.slice(8);
+                    } else if (message.startsWith('/blindroll ') || message.startsWith('/br ')) {
+                        rollMode = "blindroll";
+                        whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
+                        rollData = message.startsWith('/br ') ? message.slice(4) : message.slice(10);
+                    } else if (message.startsWith('/selfroll ') || message.startsWith('/sr ')) {
+                        rollMode = "selfroll";
+                        whisperIds = [game.user.id];
+                        rollData = message.startsWith('/sr ') ? message.slice(4) : message.slice(10);
+                    } else {
+                        rollMode = game.settings.get("core", "rollMode");
+                        rollData = message.startsWith('/r ') ? message.slice(3) : message.slice(6);
+                        switch (rollMode) {
+                            case "gmroll":
+                            case "blindroll":
+                                whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
+                                break;
+                            case "selfroll":
+                                whisperIds = [game.user.id];
+                                break;
                         }
-
-                        const rollData = message.slice(message.indexOf(' ') + 1);
-                        const roll = await new Roll(rollData).evaluate({async: true});
+                    }
+            
+                    // 채팅 입력창 초기화를 먼저 함
+                    ui.chat.element.find('#chat-message').val('');
+            
+                    (async () => {
+                        const roll = new Roll(rollData.trim());
+                        await roll.evaluate({async: true});
                         
                         if (game.dice3d) {
-                            await game.dice3d.showForRoll(roll, game.user, true);
+                            await game.dice3d.showForRoll(roll);
                         }
-
+            
                         const chatData = {
                             user: game.user.id,
                             speaker: speaker,
@@ -403,32 +450,35 @@ export class ChatSelector {
                                 }
                             }
                         };
-
-                        // whisper 대상이 있으면 추가
+            
                         if (whisperIds.length > 0) {
                             chatData.whisper = whisperIds;
                         }
-
-                        return ChatMessage.create(chatData);
-                    } catch (err) {
-                        console.error(err);
-                        return originalProcessMessage.call(this, message);
-                    }
+            
+                        await ChatMessage.create(chatData);
+                    })();
+            
+                    return true;
+                } catch (err) {
+                    console.error("Roll error:", err);
+                    ui.notifications.error("Invalid roll formula");
+                    return null;
                 }
-                    
-                    // 일반 메시지
-                    return ChatMessage.create({
-                        user: game.user.id,
-                        speaker: speaker,
-                        content: message,
-                        type: CONST.CHAT_MESSAGE_TYPES.IC
-                    });
-                };
             }
+    
+                if (message.startsWith('/')) {
+                    return originalProcessMessage.call(this, message);
+                }
+                
+                return ChatMessage.create({
+                    user: game.user.id,
+                    speaker: speaker,
+                    content: message,
+                    type: CONST.CHAT_MESSAGE_TYPES.IC
+                });
+            };
         } else {
-            const originalProcessMessage = ui.chat.constructor.prototype.processMessage;
-            ui.chat.processMessage = originalProcessMessage;
-            delete ChatMessage.implementation.prototype._getChatSpeakerData;
+            ui.chat.processMessage = ui.chat.constructor.prototype.processMessage;
         }
     }
 
@@ -529,30 +579,32 @@ export class ChatSelector {
 
             return tokenImg;
         }
-
+        
         static async _addPortraitToMessage(message, html, data) {
             if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
 
-            const isV12 = game.version && Number(game.version.split('.')[0]) >= 12;
-            
-            const messageStyle = isV12 ? message.style : message.type;
-            const validStyles = [0, 1, 2, 3, 4];
-            
-            console.log("Message style/type check:", {
-                value: messageStyle,
-                isValid: validStyles.includes(messageStyle)
-            });
+            const messageStyle = game.version.startsWith('12') ? message.style : message.type;
+
+            const isNarratorMessage = 
+            message.flags?.["narrator-tools"]?.type === "description" ||
+            message.flags?.["narrator-tools"]?.type === "narration" ||
+            message.flags?.["cgmp"]?.subType === 1;
+    
+            if (isNarratorMessage) return;
+
+            // 모듈에서 처리하는 메시지 타입인지 확인
+            const isOurMessage = 
+                (messageStyle === CONST.CHAT_MESSAGE_TYPES.IC) ||
+                (messageStyle === CONST.CHAT_MESSAGE_TYPES.EMOTE) ||
+                (messageStyle === CONST.CHAT_MESSAGE_TYPES.OOC) ||
+                (messageStyle === CONST.CHAT_MESSAGE_TYPES.ROLL && !message.flags?.["core"]?.external) ||
+                (messageStyle === CONST.CHAT_MESSAGE_TYPES.WHISPER);
         
-            if (!validStyles.includes(messageStyle)) {
-                console.log("Invalid message style/type, stopping portrait addition");
-                return;
-            }
+            if (!isOurMessage) return;
         
             const speaker = message.speaker;
-            if (!speaker) {
-                return;
-            }
-         
+            if (!speaker) return;
+        
             const header = html.find('.message-header');
             if (!header.length) return;
          
@@ -654,4 +706,96 @@ export class ChatSelector {
         return scene.tokens.get(speaker.token)?.object || 
                canvas.tokens?.placeables.find(t => t.id === speaker.token);
     }
+
+    // 빠른 바꾸기 이름 매칭
+    static _findBestMatch(searchTerm, actors) {
+        const koreanConsonants = {
+            'ㄱ': '[가-깋]',
+            'ㄴ': '[나-닣]',
+            'ㄷ': '[다-딯]',
+            'ㄹ': '[라-맇]',
+            'ㅁ': '[마-밓]',
+            'ㅂ': '[바-빟]',
+            'ㅅ': '[사-싷]',
+            'ㅇ': '[아-잏]',
+            'ㅈ': '[자-짛]',
+            'ㅊ': '[차-칳]',
+            'ㅋ': '[카-킿]',
+            'ㅌ': '[타-팋]',
+            'ㅍ': '[파-핗]',
+            'ㅎ': '[하-힣]'
+        };
+    
+        let searchPattern = searchTerm.split('').map(char => {
+            return koreanConsonants[char] || char;
+        }).join('.*');
+    
+        let bestMatch = null;
+        let bestScore = Infinity;
+        const searchTermLower = searchTerm.toLowerCase();
+        const searchRegex = new RegExp(searchPattern, 'i');
+    
+        actors.forEach(actor => {
+            const nameLower = actor.name.toLowerCase();
+            let score = 10;  
+            
+            if (nameLower.startsWith(searchTermLower)) {
+                score = 0;
+            }
+            else if (nameLower.split(' ').some(word => word.startsWith(searchTermLower))) {
+                score = 1;
+            }
+            else if (searchRegex.test(actor.name)) {
+                score = 2;
+            }
+            else if (nameLower.includes(searchTermLower)) {
+                score = 3;
+            }
+            else {
+                score = this._getLevenshteinDistance(searchTermLower, nameLower);
+                score = score / Math.max(nameLower.length, searchTermLower.length) * 10;
+            }
+    
+            const lengthDiff = Math.abs(nameLower.length - searchTermLower.length);
+            score += lengthDiff * 0.1;
+    
+            if (score < bestScore) {
+                bestScore = score;
+                bestMatch = actor;
+            }
+        });
+    
+        return bestScore < 3 ? bestMatch : null;
+    }
+
+    static _getLevenshteinDistance(a, b) {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+    
+        const matrix = [];
+    
+        for (let i = 0; i <= b.length; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= a.length; j++) {
+            matrix[0][j] = j;
+        }
+    
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i-1) === a.charAt(j-1)) {
+                    matrix[i][j] = matrix[i-1][j-1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i-1][j-1] + 1,  
+                        matrix[i][j-1] + 1,   
+                        matrix[i-1][j] + 1     
+                    );
+                }
+            }
+        }
+    
+        return matrix[b.length][a.length];
+    }
+    
 }
