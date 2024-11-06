@@ -82,14 +82,19 @@
             "HidePortrait": {
             "Name": "Hide D&D5e Portrait",
             "Hint": "Hides the default D&D5e chat portrait when enabled. This helps avoid duplicate portraits when using the Chat Selector module."
-            }
+            },
+            "AllowedModuleFlags": {
+                "Name": "Allowed Module Flags",
+                "Hint": "Enter module flag IDs separated by commas to allow portrait display for their messages (e.g., foundryvtt-simple-calendar, module-id-2)"
+            },
+            "ReloadRequired": "Please refresh your browser for the changes to take effect."
         },
         "Warnings": {
-            "NoName": "Please enter a character name.",
-            "NoMatch": "No matching character found."
+            "NoName": "Please enter a Actor name.",
+            "NoMatch": "No matching Actor found."
         },
         "Info": {
-            "CharacterChanged": "Character changed to {name}."
+            "CharacterChanged": "Actor changed to {name}."
         }
     }
 }

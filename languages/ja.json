@@ -82,14 +82,19 @@
             "HidePortrait": {
                 "Name": "D&D5eポートレートを隠す",
                 "Hint": "デフォルトのD&D5eチャットポートレートを非表示にします。チャットセレクターモジュールを使用する際のポートレートの重複を防ぎます。"
-            }
+            },
+            "AllowedModuleFlags": {
+                "Name": "許可するモジュールフラグ",
+                "Hint": "ポートレートを表示するモジュールのフラグIDをカンマで区切って入力してください（例：foundryvtt-simple-calendar, module-id-2）"
+            },
+            "ReloadRequired": "変更を適用するにはブラウザを更新してください。"
         },
         "Warnings": {
-            "NoName": "キャラクター名を入力してください。",
-            "NoMatch": "一致するキャラクターが見つかりません。"
+            "NoName": "アクター名を入力してください。",
+            "NoMatch": "一致するアクターが見つかりません。"
         },
         "Info": {
-            "CharacterChanged": "キャラクターを{name}に変更しました。"
+            "CharacterChanged": "アクターを{name}に変更しました。"
         }
     }
 }
