@@ -7,7 +7,7 @@ Character Chat Selector enhances Foundry VTT's chat interface by providing a con
 - Speak as any owned character without needing tokens on the scene
 - You can choose to have your chat messages display properly in token style even if you don't place a token  
 - Seamlessly switch between characters using a quick dropdown menu
-- Quick-switch using /c or ! commands (ex: /c Actor name or ! Actor name)
+- Quick-switch using /c or ! commands (ex: /c Actor name or ! Actor name). It will automatically select the most similar Actor, even if you don't enter all the names.
 - 한국어의 경우 더 다양한 검색 옵션을 제공합니다. (예: /c ㅇㅅ -> "알마 샹델리아", /c 알샹 -> "알마 샹델리아", /c 샹델리 -> "알마 샹델리아")
 
 ### Chat Portrait System
