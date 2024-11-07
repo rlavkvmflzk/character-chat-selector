@@ -10,20 +10,20 @@ export class HpTintEffect {
     static initialize() {
         this.registerSettings();
     }
-
+    
     static registerSettings() {
         game.settings.register('character-chat-selector', this.SETTINGS.USE_HP_TINT, {
-            name: "HP 상태 표시",
-            hint: "HP가 낮아질수록 초상화가 붉게 변합니다",
+            name: game.i18n.localize('CHATSELECTOR.Settings.UseHpTint.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.UseHpTint.Hint'),
             scope: 'client',
             config: true,
             type: Boolean,
             default: false
         });
-
+    
         game.settings.register('character-chat-selector', this.SETTINGS.HP_TINT_INTENSITY, {
-            name: "HP 상태 표시 강도",
-            hint: "HP 상태 표시의 붉은색 강도를 설정합니다",
+            name: game.i18n.localize('CHATSELECTOR.Settings.HpTintIntensity.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.HpTintIntensity.Hint'),
             scope: 'client',
             config: true,
             type: Number,
@@ -34,19 +34,19 @@ export class HpTintEffect {
             },
             default: 0.5
         });
-
+    
         game.settings.register('character-chat-selector', this.SETTINGS.HP_CURRENT_PATH, {
-            name: "현재 HP 경로",
-            hint: "현재 HP값이 저장된 actor 데이터의 경로를 입력하세요",
+            name: game.i18n.localize('CHATSELECTOR.Settings.HpCurrentPath.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.HpCurrentPath.Hint'),
             scope: 'world',
             config: true,
             type: String,
             default: this._getSystemDefaults().current
         });
-
+    
         game.settings.register('character-chat-selector', this.SETTINGS.HP_MAX_PATH, {
-            name: "최대 HP 경로",
-            hint: "최대 HP값이 저장된 actor 데이터의 경로를 입력하세요",
+            name: game.i18n.localize('CHATSELECTOR.Settings.HpMaxPath.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.HpMaxPath.Hint'),
             scope: 'world',
             config: true,
             type: String,
@@ -198,7 +198,6 @@ export class HpTintEffect {
                     height: 100%;
                     pointer-events: none;
                     mix-blend-mode: multiply;
-                    transition: background-color 0.3s ease-in-out;
                     background-color: rgba(255, 0, 0, 0);
                 }
 

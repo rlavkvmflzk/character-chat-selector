@@ -28,6 +28,8 @@ export class ChatSelector {
             if (game.settings.get('character-chat-selector', this.SETTINGS.SHOW_SELECTOR)) {
                 this._createSelector();
             }
+                this._updateDropdownStyles();
+        });
 
             // 캐릭터 이름으로 찾기 시작
             Hooks.on("chatMessage", (chatLog, messageText, chatData) => {
@@ -41,35 +43,44 @@ export class ChatSelector {
                         ui.notifications.warn(game.i18n.localize("CHATSELECTOR.Warnings.NoName"));
                         return false;
                     }
-    
+            
                     const availableActors = game.actors.filter(actor => {
                         if (game.user.isGM) return true;
                         return actor.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
                     });
-    
+            
                     const bestMatch = this._findBestMatch(searchTerm, availableActors);
-    
+            
                     if (bestMatch) {
+                        // 실제 select 엘리먼트 업데이트
                         const select = document.querySelector('.character-select');
-                        if (select) {
+                        const customSelect = document.querySelector('.custom-select');
+                        if (select && customSelect) {
+                            // 기본 select 값 변경
                             select.value = bestMatch.id;
                             
-                            const event = new Event('change');
-                            select.dispatchEvent(event);
+                            // 커스텀 UI 업데이트
+                            const selectedDiv = customSelect.querySelector('.select-selected');
+                            if (selectedDiv) {
+                                selectedDiv.textContent = bestMatch.name;
+                            }
+            
+                            // 이벤트 발생
+                            const event = { target: { value: bestMatch.id } };
+                            this._onCharacterSelect(event);
+                            
+                            ui.notifications.info(game.i18n.format("CHATSELECTOR.Info.CharacterChanged", {
+                                name: bestMatch.name
+                            }));
                         }
-    
-                        ui.notifications.info(game.i18n.format("CHATSELECTOR.Info.CharacterChanged", {
-                            name: bestMatch.name
-                        }));
                     } else {
                         ui.notifications.warn(game.i18n.localize("CHATSELECTOR.Warnings.NoMatch"));
                     }
-    
-                    return false; // 채팅에 기본 출력 방지
+            
+                    return false;
                 }
                 return true;
             });
-        });
 
         // 액터 변경 감지
         Hooks.on('createActor', () => {
@@ -283,7 +294,67 @@ export class ChatSelector {
                 ui.notifications.warn(game.i18n.localize('CHATSELECTOR.Settings.ReloadRequired'), {permanent: true});
             }
         });
-    }
+
+        // 드롭다운 스타일 설정
+        ColorPicker.register('character-chat-selector', 'dropdownBackground', {
+            name: game.i18n.localize('CHATSELECTOR.Settings.DropdownBackground.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.DropdownBackground.Hint'),
+            scope: 'client',
+            config: true,
+            default: '#000000B3', // rgba(0, 0, 0, 0.7)
+        }, {
+            format: 'hexa',
+            alphaChannel: true,
+            preview: true
+        });
+    
+        ColorPicker.register('character-chat-selector', 'dropdownTextColor', {
+            name: game.i18n.localize('CHATSELECTOR.Settings.DropdownTextColor.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.DropdownTextColor.Hint'),
+            scope: 'client',
+            config: true,
+            default: '#f0f0f0FF',
+        }, {
+            format: 'hexa',
+            alphaChannel: true,
+            preview: true
+        });
+    
+        ColorPicker.register('character-chat-selector', 'dropdownBorderColor', {
+            name: game.i18n.localize('CHATSELECTOR.Settings.DropdownBorderColor.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.DropdownBorderColor.Hint'),
+            scope: 'client',
+            config: true,
+            default: '#7a7971FF',
+        }, {
+            format: 'hexa',
+            alphaChannel: true,
+            preview: true
+        });
+    
+        ColorPicker.register('character-chat-selector', 'dropdownHoverColor', {
+            name: game.i18n.localize('CHATSELECTOR.Settings.DropdownHoverColor.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.DropdownHoverColor.Hint'),
+            scope: 'client',
+            config: true,
+            default: '#FFFFFF1A', // rgba(255, 255, 255, 0.1)
+        }, {
+            format: 'hexa',
+            alphaChannel: true,
+            preview: true
+        });
+    
+        // 썸네일 프리뷰 활성화 설정
+        game.settings.register('character-chat-selector', 'enableThumbnailPreview', {
+            name: game.i18n.localize('CHATSELECTOR.Settings.EnableThumbnailPreview.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.EnableThumbnailPreview.Hint'),
+            scope: 'client',
+            config: true,
+            type: Boolean,
+            default: true,
+            onChange: () => this._updateDropdownStyles()
+        });
+}
 
     static _createSelector() {
         const chatControls = document.querySelector("#chat-controls");
@@ -295,21 +366,30 @@ export class ChatSelector {
         if (document.querySelector('.character-chat-selector')) {
             return;
         }
-
+    
         const currentSpeaker = ChatMessage.getSpeaker();
-
+    
         const selectorHtml = `
-            <div class="character-chat-selector">
-                <select class="character-select">
-                    <option value="">기본</option>
+        <div class="character-chat-selector">
+            <select class="character-select" style="display: none;">
+                <option value="">기본</option>
+                ${this._getCharacterOptions(currentSpeaker.actor)}
+            </select>
+            <div class="custom-select">
+                <div class="select-selected">기본</div>
+                <div class="select-items">
+                    <div class="select-item" data-value="">
+                        <span>기본</span>
+                    </div>
                     ${this._getCharacterOptions(currentSpeaker.actor)}
-                </select>
-                <button class="refresh-characters" title="목록 새로고침">
-                    <i class="fas fa-sync"></i>
-                </button>
+                </div>
             </div>
-        `;
-
+            <button class="refresh-characters" title="목록 새로고침">
+                <i class="fas fa-sync"></i>
+            </button>
+        </div>
+    `;
+    
         chatControls.insertAdjacentHTML('beforeend', selectorHtml);
         this._addEventListeners();
     }
@@ -317,33 +397,93 @@ export class ChatSelector {
     static _getCharacterOptions(currentActorId) {        
         const actors = game.actors
             .filter(actor => {
-                // GM은 모든 액터를 볼 수 있음
                 if (game.user.isGM) return true;
-                
-                // 일반 플레이어는 자신이 소유한 액터만 볼 수 있음
                 return actor.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
             })
-            .sort((a, b) => a.name.localeCompare(b.name)); // 이름 기준으로 알파벳 순 정렬
+            .sort((a, b) => a.name.localeCompare(b.name));
         
-        const options = actors
-            .map(a => {
-                return `<option value="${a.id}" ${a.id === currentActorId ? 'selected' : ''}>${a.name}</option>`;
-            })
+        return actors
+            .map(a => `
+                <div class="select-item ${a.id === currentActorId ? 'selected' : ''}" 
+                    data-value="${a.id}">
+                    <img class="actor-thumbnail" src="${a.img}" alt="${a.name}">
+                    <span>${a.name}</span>
+                </div>
+            `)
             .join('');
-    
-        return options;
     }
 
     static _addEventListeners() {
-        const select = document.querySelector('.character-select');
+        const selectDiv = document.querySelector('.custom-select');
+        const selected = selectDiv?.querySelector('.select-selected');
+        const itemsDiv = selectDiv?.querySelector('.select-items');
         const refreshButton = document.querySelector('.refresh-characters');
-
-        if (select) {
-            select.addEventListener('change', (event) => {
-                this._onCharacterSelect(event);
+    
+        if (selected) {
+            selected.addEventListener('click', () => {
+                itemsDiv?.classList.toggle('show');
             });
         }
-
+    
+        if (itemsDiv) {
+            itemsDiv.querySelectorAll('.select-item').forEach(item => {
+                // 썸네일 미리보기 요소 생성
+                const thumbnail = item.querySelector('.actor-thumbnail');
+                if (thumbnail) {
+                    const preview = document.createElement('div');
+                    preview.className = 'thumbnail-preview';
+                    const previewImg = document.createElement('img');
+                    previewImg.src = thumbnail.src;
+                    preview.appendChild(previewImg);
+                    item.appendChild(preview);
+    
+                    // 마우스 진입 시 위치 계산 및 조정
+                    item.addEventListener('mouseenter', (e) => {
+                        const itemRect = item.getBoundingClientRect();
+                        const previewRect = preview.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const viewportWidth = window.innerWidth;
+                        
+                        // 미리보기의 기본 위치 계산
+                        let top = itemRect.top + (itemRect.height - 150) / 2; // 150은 미리보기 높이
+                        
+                        // 화면 하단을 벗어나는 경우
+                        if (top + 150 > viewportHeight) {
+                            top = viewportHeight - 160; // 10px 여백
+                        }
+                        
+                        // 화면 상단을 벗어나는 경우
+                        if (top < 10) {
+                            top = 10;
+                        }
+                        
+                        // 좌우 위치 결정
+                        let left = itemRect.right + 10;
+                        if (left + 150 > viewportWidth) {
+                            left = itemRect.left - 160; // 미리보기 너비 + 여백
+                        }
+                        
+                        preview.style.top = `${top}px`;
+                        preview.style.left = `${left}px`;
+                    });
+                }
+    
+                item.addEventListener('click', () => {
+                    const value = item.dataset.value;
+                    const text = item.querySelector('span').textContent;
+                    selected.textContent = text;
+                    itemsDiv.classList.remove('show');
+                    this._onCharacterSelect({ target: { value } });
+                });
+            });
+        }
+        
+        document.addEventListener('click', (e) => {
+            if (!selectDiv?.contains(e.target)) {
+                itemsDiv?.classList.remove('show');
+            }
+        });
+    
         if (refreshButton) {
             refreshButton.addEventListener('click', () => {
                 this._updateCharacterList();
@@ -852,4 +992,46 @@ export class ChatSelector {
         return matrix[b.length][a.length];
     }
     
+    static _updateDropdownStyles() {
+        const styleId = 'character-selector-custom-styles';
+        let styleElement = document.getElementById(styleId);
+        
+        if (!styleElement) {
+            styleElement = document.createElement('style');
+            styleElement.id = styleId;
+            document.head.appendChild(styleElement);
+        }
+    
+        const backgroundColor = game.settings.get('character-chat-selector', 'dropdownBackground');
+        const textColor = game.settings.get('character-chat-selector', 'dropdownTextColor');
+        const borderColor = game.settings.get('character-chat-selector', 'dropdownBorderColor');
+        const hoverColor = game.settings.get('character-chat-selector', 'dropdownHoverColor');
+        const enableThumbnail = game.settings.get('character-chat-selector', 'enableThumbnailPreview');
+    
+        styleElement.textContent = `
+            .select-items {
+                background: ${backgroundColor};
+                border-color: ${borderColor};
+                color: ${textColor};
+            }
+            
+            .select-selected {
+                background: ${backgroundColor};
+                border-color: ${borderColor};
+                color: ${textColor};
+            }
+            
+            .select-item {
+                color: ${textColor};
+            }
+            
+            .select-item:hover {
+                background-color: ${hoverColor};
+            }
+    
+            .thumbnail-preview {
+                display: ${enableThumbnail ? 'none' : 'none !important'};
+            }
+        `;
+    }
 }
