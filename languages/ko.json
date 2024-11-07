@@ -4,11 +4,11 @@
         "Settings": {
             "ShowSelector": {
                 "Name": "채팅 선택기 표시",
-                "Hint": "토큰 선택 없이 캐릭터를 선택하여 채팅할 수 있는 선택기를 표시합니다."
+                "Hint": "토큰 선택 없이 액터를 선택하여 채팅할 수 있는 선택기를 표시합니다."
             },
             "SpeakAsToken": {
                 "Name": "토큰으로 말하기 모드",
-                "Hint": "활성화하면 토큰이 씬에 없어도 선택한 캐릭터의 토큰으로 말하는 것처럼 동작합니다."
+                "Hint": "활성화하면 토큰이 씬에 없어도 선택한 액터의 토큰으로 말하는 것처럼 동작합니다."
             },
             "ShowPortrait": {
                 "Name": "채팅 초상화 표시",
@@ -73,11 +73,11 @@
             },
             "HpCurrentPath": {
                 "Name": "현재 HP 경로",
-                "Hint": "현재 HP값이 저장된 actor 데이터의 경로를 입력하세요"
+                "Hint": "현재 HP값이 저장된 액터의 데이터의 경로를 입력하세요"
             },
             "HpMaxPath": {
                 "Name": "최대 HP 경로",
-                "Hint": "최대 HP값이 저장된 actor 데이터의 경로를 입력하세요"
+                "Hint": "최대 HP값이 저장된 액터의 데이터의 경로를 입력하세요"
             },
             "HidePortrait": {
                 "Name": "D&D5e 초상화 숨기기",
@@ -86,6 +86,26 @@
             "AllowedModuleFlags": {
                 "Name": "허용할 모듈 플래그",
                 "Hint": "포트레잇을 표시할 모듈의 플래그 ID를 쉼표로 구분하여 입력하세요 (예: foundryvtt-simple-calendar, module-id-2)"
+            },
+            "DropdownBackground": {
+                "Name": "드롭다운 배경색",
+                "Hint": "드롭다운 메뉴의 배경색을 설정합니다"
+            },
+            "DropdownTextColor": {
+                "Name": "드롭다운 텍스트 색상",
+                "Hint": "드롭다운 메뉴의 텍스트 색상을 설정합니다"
+            },
+            "DropdownBorderColor": {
+                "Name": "드롭다운 테두리 색상",
+                "Hint": "드롭다운 메뉴의 테두리 색상을 설정합니다"
+            },
+            "DropdownHoverColor": {
+                "Name": "드롭다운 호버 색상",
+                "Hint": "드롭다운 항목에 마우스를 올렸을 때의 배경색을 설정합니다"
+            },
+            "EnableThumbnailPreview": {
+                "Name": "썸네일 미리보기 활성화",
+                "Hint": "액터 썸네일에 마우스를 올렸을 때 큰 이미지를 보여줍니다"
             },
             "ReloadRequired": "변경사항을 적용하려면 브라우저를 새로고침해주세요."
         },

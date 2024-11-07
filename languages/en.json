@@ -87,6 +87,26 @@
                 "Name": "Allowed Module Flags",
                 "Hint": "Enter module flag IDs separated by commas to allow portrait display for their messages (e.g., foundryvtt-simple-calendar, module-id-2)"
             },
+            "DropdownBackground": {
+                "Name": "Dropdown Background Color",
+                "Hint": "Set the background color of the dropdown menu"
+            },
+            "DropdownTextColor": {
+                "Name": "Dropdown Text Color",
+                "Hint": "Set the text color of the dropdown menu"
+            },
+            "DropdownBorderColor": {
+                "Name": "Dropdown Border Color",
+                "Hint": "Set the border color of the dropdown menu"
+            },
+            "DropdownHoverColor": {
+                "Name": "Dropdown Hover Color",
+                "Hint": "Set the background color when hovering over dropdown items"
+            },
+            "EnableThumbnailPreview": {
+                "Name": "Enable Thumbnail Preview",
+                "Hint": "Show large preview when hovering over character thumbnails"
+            },
             "ReloadRequired": "Please refresh your browser for the changes to take effect."
         },
         "Warnings": {
