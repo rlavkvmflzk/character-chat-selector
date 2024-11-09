@@ -1,5 +1,6 @@
 import { HpTintEffect } from './hpTintEffect.js';
 import { Dnd5ePortraitHandler } from './dnd5ePortraitHandler.js';
+import { HotkeyManager } from './hotkeyManager.js';
 
 export class ChatSelector {
     static SETTINGS = {
@@ -289,7 +290,7 @@ export class ChatSelector {
             scope: 'client',
             config: true,
             type: String,
-            default: 'foundryvtt-simple-calendar',
+            default: 'foundryvtt-simple-calendar,chatedit',
             onChange: () => {
                 ui.notifications.warn(game.i18n.localize('CHATSELECTOR.Settings.ReloadRequired'), {permanent: true});
             }
@@ -372,20 +373,23 @@ export class ChatSelector {
         const selectorHtml = `
         <div class="character-chat-selector">
             <select class="character-select" style="display: none;">
-                <option value="">기본</option>
+                <option value="">${game.i18n.localize("CHATSELECTOR.Default")}</option>
                 ${this._getCharacterOptions(currentSpeaker.actor)}
             </select>
             <div class="custom-select">
-                <div class="select-selected">기본</div>
+                <div class="select-selected">${game.i18n.localize("CHATSELECTOR.Default")}</div>
                 <div class="select-items">
                     <div class="select-item" data-value="">
-                        <span>기본</span>
+                        <span>${game.i18n.localize("CHATSELECTOR.Default")}</span>
                     </div>
                     ${this._getCharacterOptions(currentSpeaker.actor)}
                 </div>
             </div>
-            <button class="refresh-characters" title="목록 새로고침">
+            <button class="refresh-characters" title="${game.i18n.localize("CHATSELECTOR.RefreshList")}">
                 <i class="fas fa-sync"></i>
+            </button>
+            <button class="configure-hotkeys" title="${game.i18n.localize("CHATSELECTOR.ConfigureHotkeys")}">
+                <i class="fas fa-keyboard"></i>
             </button>
         </div>
     `;
@@ -475,6 +479,13 @@ export class ChatSelector {
                     itemsDiv.classList.remove('show');
                     this._onCharacterSelect({ target: { value } });
                 });
+            });
+        }
+        
+        const configureButton = document.querySelector('.configure-hotkeys');
+        if (configureButton) {
+            configureButton.addEventListener('click', () => {
+                HotkeyManager.showConfig();
             });
         }
         
@@ -663,7 +674,7 @@ export class ChatSelector {
 
         const currentValue = select.value;
         select.innerHTML = `
-            <option value="">기본</option>
+            <option value="">${game.i18n.localize("CHATSELECTOR.Default")}</option>
             ${this._getCharacterOptions(currentValue)}
         `;
         select.value = currentValue;
@@ -755,14 +766,6 @@ export class ChatSelector {
         
         static async _addPortraitToMessage(message, html, data) {
             if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
-
-            console.log("Message details:", {
-                style: message.style,
-                type: message.type,
-                flags: message.flags,
-                content: message.content,
-                command: message?.flags?.core?.command
-            });
 
             const messageStyle = game.version.startsWith('12') ? message.style : message.type;
 

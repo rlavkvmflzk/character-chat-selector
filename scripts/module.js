@@ -1,7 +1,10 @@
 import { ChatSelector } from './chatSelector.js';
+import { HotkeyManager } from './hotkeyManager.js';
 
 Hooks.once('init', () => {
+    console.log('Character Chat Selector: Initializing...');
     ChatSelector.initialize();
+    HotkeyManager.initialize();
 });
 
 // 채팅 메시지 생성 전에 추가 처리
@@ -19,4 +22,13 @@ Hooks.on('preCreateChatMessage', (message, data) => {
         }
     }
     return true;
+});
+
+document.addEventListener('characterHotkeySwitch', (event) => {
+    console.log('Character Chat Selector: Received hotkey switch event:', event.detail);
+    const select = document.querySelector('.character-select');
+    if (select) {
+        select.value = event.detail.actorId;
+        ChatSelector._onCharacterSelect({ target: { value: event.detail.actorId } });
+    }
 });
