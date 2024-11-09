@@ -1,6 +1,7 @@
 {
     "CHATSELECTOR": {
         "Default": "デフォルト",
+        "RefreshList": "リストを更新",
         "Settings": {
             "ShowSelector": {
                 "Name": "チャットセレクターを表示",
@@ -107,11 +108,30 @@
                 "Name": "サムネイルプレビューを有効化",
                 "Hint": "アクターのサムネイルにマウスを合わせた時に大きな画像を表示します"
             },
+            "EnableHotkeys": {
+                "Name": "アクター切り替えホットキーを有効にする",
+                "Hint": "Ctrl + 数字/文字キーでアクターをすばやく切り替えることができます。"
+            },
+            "HotkeyModifier": {
+                "Name": "ホットキーの修飾キー",
+                "Hint": "ホットキーと一緒に使用する修飾キーを選択してください。他のFoundryのホットキーと競合しないようにご注意ください。"
+            },
+            "HotkeyConfig": {
+                "Instructions": "各アクターの入力欄をクリックし、設定したいキーを押してホットキーを設定してください（数字または文字）。",
+                "ModifierNote": "設定されたホットキーは{modifier}キーと一緒に使用されます（例：{modifier} + 1）。"
+            },
             "ReloadRequired": "変更を適用するにはブラウザを更新してください。"
+        },
+        "ConfigureHotkeys": "ホットキーの設定",
+        "HotkeyConfig": {
+            "Title": "アクター切り替えホットキー設定",
+            "Instructions": "各アクターの入力欄をクリックし、設定したいキーを押してホットキーを設定してください。",
+            "ModifierNote": "設定されたホットキーは{modifier}キーと一緒に使用されます。"
         },
         "Warnings": {
             "NoName": "アクター名を入力してください。",
-            "NoMatch": "一致するアクターが見つかりません。"
+            "NoMatch": "一致するアクターが見つかりません。",
+            "HotkeyInUse": "{name}はすでに{key}キーを使用しています。"
         },
         "Info": {
             "CharacterChanged": "アクターを{name}に変更しました。"

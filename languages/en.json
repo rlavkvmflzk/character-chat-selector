@@ -1,6 +1,7 @@
 {
     "CHATSELECTOR": {
         "Default": "Default",
+        "RefreshList": "Refresh List",
         "Settings": {
             "ShowSelector": {
                 "Name": "Show Chat Selector",
@@ -107,11 +108,30 @@
                 "Name": "Enable Thumbnail Preview",
                 "Hint": "Show large preview when hovering over character thumbnails"
             },
+            "EnableHotkeys": {
+                "Name": "Enable Actor Switch Hotkeys",
+                "Hint": "You can quickly switch actors using Ctrl + number/letter keys."
+            },
+            "HotkeyModifier": {
+                "Name": "Hotkey Modifier Key",
+                "Hint": "Select a modifier key to use with the hotkey. Be careful to avoid conflicts with other Foundry hotkeys."
+            },
+            "HotkeyConfig": {
+                "Instructions": "Click each actor's input field and press the desired key to set a hotkey (number or letter).",
+                "ModifierNote": "The assigned hotkey will be used with {modifier} (e.g., {modifier} + 1)."
+            },
             "ReloadRequired": "Please refresh your browser for the changes to take effect."
+        },
+        "ConfigureHotkeys": "Configure Hotkeys",
+        "HotkeyConfig": {
+        "Title": "Actor Switch Hotkey Configuration",
+        "Instructions": "Click each actor's input field and press the desired key to set a hotkey.",
+        "ModifierNote": "The assigned hotkey will be used with the {modifier} key."
         },
         "Warnings": {
             "NoName": "Please enter a Actor name.",
-            "NoMatch": "No matching Actor found."
+            "NoMatch": "No matching Actor found.",
+            "HotkeyInUse": "{name} is already using the {key} key."
         },
         "Info": {
             "CharacterChanged": "Actor changed to {name}."

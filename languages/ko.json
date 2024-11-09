@@ -1,6 +1,7 @@
 {
     "CHATSELECTOR": {
         "Default": "기본",
+        "RefreshList": "목록 새로고침",
         "Settings": {
             "ShowSelector": {
                 "Name": "채팅 선택기 표시",
@@ -107,14 +108,33 @@
                 "Name": "썸네일 미리보기 활성화",
                 "Hint": "액터 썸네일에 마우스를 올렸을 때 큰 이미지를 보여줍니다"
             },
+            "EnableHotkeys": {
+                "Name": "액터 전환 단축키 사용",
+                "Hint": "Ctrl + 숫자/문자키로 액터를 빠르게 전환할 수 있습니다"
+            },
+            "HotkeyModifier": {
+                "Name": "단축키 보조키",
+                "Hint": "단축키와 함께 사용할 보조키를 선택합니다. 파운드리의 다른 단축키와 충돌하지 않도록 주의하세요."
+            },
+            "HotkeyConfig": {
+                "Instructions": "각 액터의 입력란을 클릭하고 원하는 키를 눌러 단축키를 설정하세요 (숫자 또는 문자)",
+                "ModifierNote": "설정된 단축키는 {modifier}와 함께 사용됩니다 (예: {modifier} + 1)"
+            },
             "ReloadRequired": "변경사항을 적용하려면 브라우저를 새로고침해주세요."
         },
+        "ConfigureHotkeys": "단축키 설정",
+        "HotkeyConfig": {
+            "Title": "액터 전환 단축키 설정",
+            "Instructions": "각 액터의 입력란을 클릭하고 원하는 키를 눌러 단축키를 설정하세요",
+            "ModifierNote": "설정된 단축키는 {modifier}키와 함께 사용됩니다"
+        },
         "Warnings": {
-            "NoName": "캐릭터 이름을 입력해주세요.",
-            "NoMatch": "일치하는 캐릭터를 찾을 수 없습니다."
+            "NoName": "액터의 이름을 입력해주세요.",
+            "NoMatch": "일치하는 액터를 찾을 수 없습니다.",
+            "HotkeyInUse": "{name} 액터가 이미 {key} 키를 사용 중입니다"
         },
         "Info": {
-            "CharacterChanged": "캐릭터가 {name}로 변경되었습니다."
+            "CharacterChanged": "액터가 {name}로 변경되었습니다."
         }
     }
 }
