@@ -19,10 +19,10 @@ Character Chat Selector enhances Foundry VTT's chat interface by providing a con
 - HP-based portrait tinting
 
 ### Actor Switching Hotkeys
-Rapidly switch between actors using customizable hotkeys:
-Default: Ctrl + number or Ctrl + letter
-Optional modifiers: Shift + key, Alt + Ctrl + key, Ctrl + Shift + key
-Enables easy and efficient character switching directly from the chat
+- Rapidly switch between actors using customizable hotkeys:
+- Default: Ctrl + number or Ctrl + letter
+- Optional modifiers: Shift + key, Alt + Ctrl + key, Ctrl + Shift + key
+- Enables easy and efficient character switching directly from the chat
 
 ## Installation
 1. Copy the manifest URL: (https://github.com/rlavkvmflzk/character-chat-selector/releases/latest/download/module.json)
