@@ -277,3 +277,75 @@
     border: none;  
 }
 
+/* styles/hotkeys.css */
+.hotkey-config .character-hotkeys {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hotkey-config .character-hotkey-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.hotkey-config .character-hotkey-row img {
+    border: none;
+    border-radius: 4px;
+}
+
+.hotkey-config .character-name {
+    flex: 1;
+    font-weight: bold;
+}
+
+.hotkey-config .hotkey-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.hotkey-config .hotkey-input {
+    width: 40px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.hotkey-config .clear-hotkey {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    color: #666;
+    background: none;
+    border: none;
+}
+
+.hotkey-config .clear-hotkey:hover {
+    color: #000;
+    text-shadow: 0 0 8px red;
+}
+
+.hotkey-config .notes {
+    color: #666;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+.configure-hotkeys {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    color: #666;
+    background: none;
+    border: 1px solid #666;
+    border-radius: 3px;
+}
+
+.configure-hotkeys:hover {
+    color: #000;
+    border-color: #000;
+}
