@@ -12,18 +12,19 @@ export class RubyTextHandler {
     }
 
     static registerSettings() {
+        
         game.settings.register(this.ID, this.SETTINGS.ENABLE_RUBY, {
-            name: "Enable Ruby Text",
-            hint: "Enable Japanese furigana/ruby text support in chat",
+            name: game.i18n.localize("CHATSELECTOR.Settings.EnableRuby.Name"),
+            hint: game.i18n.localize("CHATSELECTOR.Settings.EnableRuby.Hint"),
             scope: "client",
             config: true,
             type: Boolean,
             default: true
         });
-
+    
         game.settings.register(this.ID, this.SETTINGS.RUBY_SIZE, {
-            name: "Ruby Text Size",
-            hint: "Size of ruby text relative to base text",
+            name: game.i18n.localize("CHATSELECTOR.Settings.RubySize.Name"),
+            hint: game.i18n.localize("CHATSELECTOR.Settings.RubySize.Hint"),
             scope: "client",
             config: true,
             type: Number,
@@ -34,9 +35,10 @@ export class RubyTextHandler {
             },
             default: 0.6
         });
-
+    
         ColorPicker.register(this.ID, this.SETTINGS.RUBY_COLOR, {
-            name: "Ruby Text Color",
+            name: game.i18n.localize("CHATSELECTOR.Settings.RubyColor.Name"),
+            hint: game.i18n.localize("CHATSELECTOR.Settings.RubyColor.Hint"),
             scope: "client",
             default: "#666666",
             config: true
@@ -49,17 +51,16 @@ export class RubyTextHandler {
         }
     
         const rubyPattern = /\[\[(.*?)\|(.*?)\]\]/g;
-        return message.replace(rubyPattern, (match, kanji, furigana) => {
-            const kanjiLength = [...kanji].length;
-            const furiganaLength = [...furigana].length;
+        return message.replace(rubyPattern, (match, original, ruby) => {
+            const kanjiLength = [...original].length;
+            const furiganaLength = [...ruby].length;
             
             if (furiganaLength > kanjiLength) {
-                const extraSpace = Math.ceil((furiganaLength - kanjiLength) / 2); // 양쪽으로 나눌 여백 계산
-                // 루비 컨테이너에 좌우 margin 적용
-                return `<span style="display: inline-block; margin: 0 ${extraSpace * 0.5}em;"><ruby>${kanji}<rt>${furigana}</rt></ruby></span>`;
+                const extraSpace = Math.ceil((furiganaLength - kanjiLength) / 2); 
+                return `<span style="display: inline-block; margin: 0 ${extraSpace * 0.5}em;"><ruby>${original}<rt>${ruby}</rt></ruby></span>`;
             }
             
-            return `<ruby>${kanji}<rt>${furigana}</rt></ruby>`;
+            return `<ruby>${original}<rt>${ruby}</rt></ruby>`;
         });
     }
 
@@ -123,7 +124,6 @@ export class RubyTextHandler {
     }
 
     static _adjustColorForDarkMode(color) {
-        // 다크모드에서 더 밝은 색상으로 조정
         const rgb = color.match(/\w\w/g).map(x => parseInt(x, 16));
         const lighter = rgb.map(x => Math.min(255, x + 51)).map(x => x.toString(16).padStart(2, '0'));
         return `#${lighter.join('')}`;
