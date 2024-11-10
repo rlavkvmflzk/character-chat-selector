@@ -120,6 +120,18 @@
                 "Instructions": "각 액터의 입력란을 클릭하고 원하는 키를 눌러 단축키를 설정하세요 (숫자 또는 문자)",
                 "ModifierNote": "설정된 단축키는 {modifier}와 함께 사용됩니다 (예: {modifier} + 1)"
             },
+            "EnableRuby": {
+                "Name": "루비 문자 기능 사용",
+                "Hint": "채팅에서 루비 문자 기능을 사용합니다"
+            },
+            "RubySize": {
+                "Name": "루비 문자 크기",
+                "Hint": "기본 문자 대비 루비 문자의 상대적 크기를 설정합니다"
+            },
+            "RubyColor": {
+                "Name": "루비 문자 색상",
+                "Hint": "루비 문자의 색상을 설정합니다"
+            },
             "ReloadRequired": "변경사항을 적용하려면 브라우저를 새로고침해주세요."
         },
         "ConfigureHotkeys": "단축키 설정",

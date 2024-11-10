@@ -120,6 +120,18 @@
                 "Instructions": "Click each actor's input field and press the desired key to set a hotkey (number or letter).",
                 "ModifierNote": "The assigned hotkey will be used with {modifier} (e.g., {modifier} + 1)."
             },
+            "EnableRuby": {
+                "Name": "Enable Ruby Text",
+                "Hint": "Enable ruby text support in chat"
+            },
+            "RubySize": {
+                "Name": "Ruby Text Size",
+                "Hint": "Set the size of ruby text relative to the base text"
+            },
+            "RubyColor": {
+                "Name": "Ruby Text Color",
+                "Hint": "Set the color of ruby text"
+            },
             "ReloadRequired": "Please refresh your browser for the changes to take effect."
         },
         "ConfigureHotkeys": "Configure Hotkeys",
