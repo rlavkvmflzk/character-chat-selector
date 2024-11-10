@@ -1,6 +1,7 @@
 import { HpTintEffect } from './hpTintEffect.js';
 import { Dnd5ePortraitHandler } from './dnd5ePortraitHandler.js';
 import { HotkeyManager } from './hotkeyManager.js';
+import { RubyTextHandler } from './rubyTextHandler.js';
 
 export class ChatSelector {
     static SETTINGS = {
@@ -30,6 +31,16 @@ export class ChatSelector {
                 this._createSelector();
             }
                 this._updateDropdownStyles();
+        });
+
+        Hooks.once('ready', () => {
+            if (game.settings.get('character-chat-selector', this.SETTINGS.SHOW_SELECTOR)) {
+                this._createSelector();
+            }
+            this._updateDropdownStyles();
+            
+            // 초기 processMessage 설정
+            this._onCharacterSelect({ target: { value: '' } });
         });
 
             // 캐릭터 이름으로 찾기 시작
@@ -104,6 +115,7 @@ export class ChatSelector {
         if (game.system.id === 'dnd5e') {
             Dnd5ePortraitHandler.initialize();
         }
+        RubyTextHandler.initialize();
     }
 
     static registerSettings() {
@@ -504,38 +516,54 @@ export class ChatSelector {
 
     static async _onCharacterSelect(event) {
         const actorId = event.target.value;
+        const originalProcessMessage = ui.chat.processMessage;
         
-        if (actorId) {
+        ui.chat.processMessage = async function(message) {
+            if (message.startsWith("/c") || message.startsWith("!")) {
+                return ChatLog.prototype.processMessage.call(this, message);
+            }
+    
+            const processedMessage = RubyTextHandler.processMessage(message);
+    
+            if (!actorId) {
+                const speaker = ChatMessage.getSpeaker();
+                
+                if (message.startsWith('/')) {
+                    return originalProcessMessage.call(this, message);
+                }
+                
+                return ChatMessage.create({
+                    user: game.user.id,
+                    speaker: speaker,
+                    content: processedMessage,
+                    type: CONST.CHAT_MESSAGE_TYPES.IC
+                });
+            }
+    
+            // 특정 액터가 선택된 경우의 기존 처리
             const actor = game.actors.get(actorId);
             if (!actor) return;
             
             const speakAsToken = game.settings.get('character-chat-selector', 'speakAsToken');
             const tokenData = actor.prototypeToken;
             
-            const originalProcessMessage = ui.chat.processMessage;
-            
-            ui.chat.processMessage = async function(message) {
-                if (message.startsWith("/c") || message.startsWith("!")) {
-                    return ChatLog.prototype.processMessage.call(this, message);
-                }
-
-                const speaker = speakAsToken ? {
-                    scene: game.scenes.current?.id,
-                    actor: actor.id,
-                    token: tokenData.id || null,
-                    alias: tokenData.name || actor.name
-                } : {
-                    scene: game.scenes.current?.id,
-                    actor: actor.id,
-                    token: null,
-                    alias: actor.name
-                };
+            const speaker = speakAsToken ? {
+                scene: game.scenes.current?.id,
+                actor: actor.id,
+                token: tokenData.id || null,
+                alias: tokenData.name || actor.name
+            } : {
+                scene: game.scenes.current?.id,
+                actor: actor.id,
+                token: null,
+                alias: actor.name
+            };
     
                 if (message.startsWith('/ooc ')) {
                     const oocText = message.slice(5);
                     return ChatMessage.create({
                         user: game.user.id,
-                        content: oocText,
+                        content: RubyTextHandler.processMessage(oocText),
                         type: CONST.CHAT_MESSAGE_TYPES.OOC
                     });
                 }
@@ -546,7 +574,7 @@ export class ChatSelector {
                     const whisperText = parts.slice(1).join(' ');
                     return ChatMessage.create({
                         user: game.user.id,
-                        content: whisperText,
+                        content: RubyTextHandler.processMessage(whisperText),
                         type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
                         whisper: game.users.filter(u => u.name === target).map(u => u.id)
                     });
@@ -556,7 +584,7 @@ export class ChatSelector {
                     const gmText = message.slice(4);
                     return ChatMessage.create({
                         user: game.user.id,
-                        content: gmText,
+                        content: RubyTextHandler.processMessage(gmText),
                         type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
                         whisper: game.users.filter(u => u.isGM).map(u => u.id)
                     });
@@ -565,10 +593,11 @@ export class ChatSelector {
                 if (message.startsWith('/emote ') || message.startsWith('/em ') || message.startsWith('/me ')) {
                     const cmdLength = message.startsWith('/emote ') ? 7 : 4;
                     const emoteText = message.slice(cmdLength);
+                    const processedEmoteText = RubyTextHandler.processMessage(emoteText);
                     return ChatMessage.create({
                         user: game.user.id,
                         speaker: speaker,
-                        content: `${speaker.alias} ${emoteText}`,
+                        content: `${speaker.alias} ${processedEmoteText}`,
                         type: CONST.CHAT_MESSAGE_TYPES.EMOTE
                     });
                 }
@@ -657,14 +686,11 @@ export class ChatSelector {
                 return ChatMessage.create({
                     user: game.user.id,
                     speaker: speaker,
-                    content: message,
+                    content: processedMessage,
                     type: CONST.CHAT_MESSAGE_TYPES.IC
                 });
             };
-        } else {
-            ui.chat.processMessage = ui.chat.constructor.prototype.processMessage;
-        }
-    }
+        } 
 
     static _updateCharacterList() {
         const select = document.querySelector('.character-select');
