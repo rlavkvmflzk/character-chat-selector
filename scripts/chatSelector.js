@@ -299,10 +299,10 @@ export class ChatSelector {
         game.settings.register('character-chat-selector', this.SETTINGS.ALLOWED_MODULE_FLAGS, {
             name: game.i18n.localize('CHATSELECTOR.Settings.AllowedModuleFlags.Name'),
             hint: game.i18n.localize('CHATSELECTOR.Settings.AllowedModuleFlags.Hint'),
-            scope: 'client',
+            scope: 'world',
             config: true,
             type: String,
-            default: 'foundryvtt-simple-calendar,chatedit',
+            default: 'foundryvtt-simple-calendar,chatedit,theatre',
             onChange: () => {
                 ui.notifications.warn(game.i18n.localize('CHATSELECTOR.Settings.ReloadRequired'), {permanent: true});
             }
