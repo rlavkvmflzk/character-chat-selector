@@ -143,10 +143,13 @@
         "Warnings": {
             "NoName": "액터의 이름을 입력해주세요.",
             "NoMatch": "일치하는 액터를 찾을 수 없습니다.",
-            "HotkeyInUse": "{name} 액터가 이미 {key} 키를 사용 중입니다"
+            "HotkeyInUse": "{name} 액터가 이미 {key} 키를 사용 중입니다",
+            "NoMessage": "캐릭터 이름 뒤에 메시지를 입력해주세요."
         },
         "Info": {
-            "CharacterChanged": "액터가 {name}로 변경되었습니다."
+            "CharacterChanged": "액터가 {name}로 변경되었습니다.",
+            "TempCharacterEnabled": "임시 캐릭터 {name}(으)로 채팅합니다.",
+            "TempCharacterDisabled": "임시 캐릭터 모드가 해제되었습니다."
         }
     }
 }

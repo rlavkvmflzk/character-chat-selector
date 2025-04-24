@@ -143,10 +143,13 @@
         "Warnings": {
             "NoName": "アクター名を入力してください。",
             "NoMatch": "一致するアクターが見つかりません。",
-            "HotkeyInUse": "{name}はすでに{key}キーを使用しています。"
+            "HotkeyInUse": "{name}はすでに{key}キーを使用しています。",
+            "NoMessage": "キャラクター名の後にメッセージを入力してください。"
         },
         "Info": {
-            "CharacterChanged": "アクターを{name}に変更しました。"
+            "CharacterChanged": "アクターを{name}に変更しました。",
+            "TempCharacterEnabled": "一時的なキャラクター {name} として会話します。",
+            "TempCharacterDisabled": "一時的なキャラクターモードが無効になりました。"
         }
     }
 }

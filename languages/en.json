@@ -143,10 +143,13 @@
         "Warnings": {
             "NoName": "Please enter a Actor name.",
             "NoMatch": "No matching Actor found.",
-            "HotkeyInUse": "{name} is already using the {key} key."
+            "HotkeyInUse": "{name} is already using the {key} key.",
+            "NoMessage": "Please enter a message after the character name."
         },
         "Info": {
-            "CharacterChanged": "Actor changed to {name}."
+            "CharacterChanged": "Actor changed to {name}.",
+            "TempCharacterEnabled": "Now chatting as temporary character: {name}.",
+            "TempCharacterDisabled": "Temporary character mode has been disabled."
         }
     }
 }
