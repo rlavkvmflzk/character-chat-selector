@@ -116,6 +116,18 @@ export class ChatSelector {
             Dnd5ePortraitHandler.initialize();
         }
         RubyTextHandler.initialize();
+
+        this.tempCharacter = null;
+
+        Hooks.once('ready', () => {
+            if (game.settings.get('character-chat-selector', this.SETTINGS.SHOW_SELECTOR)) {
+                this._createSelector();
+            }
+            this._updateDropdownStyles();
+            
+            // 초기 processMessage 설정
+            this._onCharacterSelect({ target: { value: '' } });
+        });
     }
 
     static registerSettings() {
@@ -518,9 +530,95 @@ export class ChatSelector {
         const actorId = event.target.value;
         const originalProcessMessage = ui.chat.processMessage;
         
+        // 액터가 선택되면 임시 캐릭터 상태 초기화
+        if (actorId) {
+            this.tempCharacter = null;
+        }
+        
         ui.chat.processMessage = async function(message) {
             if (message.startsWith("/c") || message.startsWith("!")) {
                 return ChatLog.prototype.processMessage.call(this, message);
+            }
+    
+            // /as 명령어 처리 추가
+            if (message.startsWith("/as ")) {
+                const asContent = message.slice(4).trim();
+                
+                // /as 명령어만 입력된 경우 (또는 공백만 있는 경우) 임시 캐릭터 모드 해제
+                if (!asContent) {
+                    ChatSelector.tempCharacter = null;
+                    ui.notifications.info(game.i18n.localize("CHATSELECTOR.Info.TempCharacterDisabled"));
+                    return false;
+                }
+                
+                // 이름과 메시지를 분리
+                const parts = asContent.split(' ');
+                const tempName = parts[0];
+                
+                // 만약 메시지도 있다면 즉시 해당 메시지 전송
+                if (parts.length > 1) {
+                    const messageContent = parts.slice(1).join(' ');
+                    const processedMessage = RubyTextHandler.processMessage(messageContent);
+                    
+                    // 임시 캐릭터 상태 저장
+                    ChatSelector.tempCharacter = {
+                        name: tempName,
+                        img: 'icons/svg/mystery-man.svg'  // 기본 이미지 사용
+                    };
+                    
+                    return ChatMessage.create({
+                        user: game.user.id,
+                        speaker: {
+                            alias: tempName
+                        },
+                        content: processedMessage,
+                        type: CONST.CHAT_MESSAGE_TYPES.IC
+                    });
+                } else {
+                    // 메시지 없이 이름만 있는 경우 임시 캐릭터 모드 설정
+                    ChatSelector.tempCharacter = {
+                        name: tempName,
+                        img: 'icons/svg/mystery-man.svg'  // 기본 이미지 사용
+                    };
+                    
+                    ui.notifications.info(game.i18n.format("CHATSELECTOR.Info.TempCharacterEnabled", {
+                        name: tempName
+                    }));
+                    
+                    return false;
+                }
+            }
+    
+            // 임시 캐릭터가 설정된 경우
+            if (ChatSelector.tempCharacter) {
+                const processedMessage = RubyTextHandler.processMessage(message);
+                
+                // 일반 채팅 메시지 처리
+                if (!message.startsWith('/')) {
+                    return ChatMessage.create({
+                        user: game.user.id,
+                        speaker: {
+                            alias: ChatSelector.tempCharacter.name
+                        },
+                        content: processedMessage,
+                        type: CONST.CHAT_MESSAGE_TYPES.IC
+                    });
+                }
+                
+                // /me, /em, /emote 명령어 처리
+                if (message.startsWith('/emote ') || message.startsWith('/em ') || message.startsWith('/me ')) {
+                    const cmdLength = message.startsWith('/emote ') ? 7 : 4;
+                    const emoteText = message.slice(cmdLength);
+                    const processedEmoteText = RubyTextHandler.processMessage(emoteText);
+                    return ChatMessage.create({
+                        user: game.user.id,
+                        speaker: {
+                            alias: ChatSelector.tempCharacter.name
+                        },
+                        content: `${ChatSelector.tempCharacter.name} ${processedEmoteText}`,
+                        type: CONST.CHAT_MESSAGE_TYPES.EMOTE
+                    });
+                }
             }
     
             const processedMessage = RubyTextHandler.processMessage(message);
@@ -559,53 +657,53 @@ export class ChatSelector {
                 alias: actor.name
             };
     
-                if (message.startsWith('/ooc ')) {
-                    const oocText = message.slice(5);
-                    return ChatMessage.create({
-                        user: game.user.id,
-                        content: RubyTextHandler.processMessage(oocText),
-                        type: CONST.CHAT_MESSAGE_TYPES.OOC
-                    });
-                }
+            if (message.startsWith('/ooc ')) {
+                const oocText = message.slice(5);
+                return ChatMessage.create({
+                    user: game.user.id,
+                    content: RubyTextHandler.processMessage(oocText),
+                    type: CONST.CHAT_MESSAGE_TYPES.OOC
+                });
+            }
     
-                if (message.startsWith('/w ') || message.startsWith('/whisper ')) {
-                    const parts = message.slice(message.indexOf(' ') + 1).split(' ');
-                    const target = parts[0];
-                    const whisperText = parts.slice(1).join(' ');
-                    return ChatMessage.create({
-                        user: game.user.id,
-                        content: RubyTextHandler.processMessage(whisperText),
-                        type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
-                        whisper: game.users.filter(u => u.name === target).map(u => u.id)
-                    });
-                }
+            if (message.startsWith('/w ') || message.startsWith('/whisper ')) {
+                const parts = message.slice(message.indexOf(' ') + 1).split(' ');
+                const target = parts[0];
+                const whisperText = parts.slice(1).join(' ');
+                return ChatMessage.create({
+                    user: game.user.id,
+                    content: RubyTextHandler.processMessage(whisperText),
+                    type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
+                    whisper: game.users.filter(u => u.name === target).map(u => u.id)
+                });
+            }
     
-                if (message.startsWith('/gm ')) {
-                    const gmText = message.slice(4);
-                    return ChatMessage.create({
-                        user: game.user.id,
-                        content: RubyTextHandler.processMessage(gmText),
-                        type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
-                        whisper: game.users.filter(u => u.isGM).map(u => u.id)
-                    });
-                }
+            if (message.startsWith('/gm ')) {
+                const gmText = message.slice(4);
+                return ChatMessage.create({
+                    user: game.user.id,
+                    content: RubyTextHandler.processMessage(gmText),
+                    type: CONST.CHAT_MESSAGE_TYPES.WHISPER,
+                    whisper: game.users.filter(u => u.isGM).map(u => u.id)
+                });
+            }
     
-                if (message.startsWith('/emote ') || message.startsWith('/em ') || message.startsWith('/me ')) {
-                    const cmdLength = message.startsWith('/emote ') ? 7 : 4;
-                    const emoteText = message.slice(cmdLength);
-                    const processedEmoteText = RubyTextHandler.processMessage(emoteText);
-                    return ChatMessage.create({
-                        user: game.user.id,
-                        speaker: speaker,
-                        content: `${speaker.alias} ${processedEmoteText}`,
-                        type: CONST.CHAT_MESSAGE_TYPES.EMOTE
-                    });
-                }
+            if (message.startsWith('/emote ') || message.startsWith('/em ') || message.startsWith('/me ')) {
+                const cmdLength = message.startsWith('/emote ') ? 7 : 4;
+                const emoteText = message.slice(cmdLength);
+                const processedEmoteText = RubyTextHandler.processMessage(emoteText);
+                return ChatMessage.create({
+                    user: game.user.id,
+                    speaker: speaker,
+                    content: `${speaker.alias} ${processedEmoteText}`,
+                    type: CONST.CHAT_MESSAGE_TYPES.EMOTE
+                });
+            }
     
-                if (message.startsWith('/r') || message.startsWith('/roll') || 
-                message.startsWith('/gmroll ') || message.startsWith('/gr ') ||
-                message.startsWith('/blindroll ') || message.startsWith('/br ') ||
-                message.startsWith('/selfroll ') || message.startsWith('/sr ')) {
+            if (message.startsWith('/r') || message.startsWith('/roll') || 
+            message.startsWith('/gmroll ') || message.startsWith('/gr ') ||
+            message.startsWith('/blindroll ') || message.startsWith('/br ') ||
+            message.startsWith('/selfroll ') || message.startsWith('/sr ')) {
                 try {
                     let rollMode = "roll";
                     let whisperIds = [];
@@ -679,18 +777,18 @@ export class ChatSelector {
                 }
             }
     
-                if (message.startsWith('/')) {
-                    return originalProcessMessage.call(this, message);
-                }
-                
-                return ChatMessage.create({
-                    user: game.user.id,
-                    speaker: speaker,
-                    content: processedMessage,
-                    type: CONST.CHAT_MESSAGE_TYPES.IC
-                });
-            };
-        } 
+            if (message.startsWith('/')) {
+                return originalProcessMessage.call(this, message);
+            }
+            
+            return ChatMessage.create({
+                user: game.user.id,
+                speaker: speaker,
+                content: processedMessage,
+                type: CONST.CHAT_MESSAGE_TYPES.IC
+            });
+        };
+    }
 
     static _updateCharacterList() {
         const select = document.querySelector('.character-select');
@@ -718,6 +816,10 @@ export class ChatSelector {
     }
 
     static async _getMessageImage(message) {
+
+        if (ChatSelector.tempCharacter && message.speaker?.alias === ChatSelector.tempCharacter.name) {
+            return ChatSelector.tempCharacter.img;
+        }
     
         // 화자가 선택되어 있지 않은 경우 (기본 상태)
         if (!message.speaker?.actor) {
