@@ -2,7 +2,7 @@
     "id": "character-chat-selector",
     "title": "Character Chat Selector",
     "description": "Provides a tokenless selector for Actors in your scene to chat with, as well as chat message customization.",
-    "version": "1.4.1",
+    "version": "1.5",
     "compatibility": {
         "minimum": "11",
         "verified": "12",
@@ -49,7 +49,7 @@
     ],
     "url": "https://github.com/rlavkvmflzk/character-chat-selector",
     "manifest": "https://github.com/rlavkvmflzk/character-chat-selector/releases/latest/download/module.json",
-    "download": "https://github.com/rlavkvmflzk/character-chat-selector/releases/download/1.4.1/module.zip",
+    "download": "https://github.com/rlavkvmflzk/character-chat-selector/releases/download/1.5/module.zip",
     "bugs": "https://github.com/rlavkvmflzk/character-chat-selector/issues",
     "readme": "README.md"
 }
