@@ -1,0 +1,155 @@
+{
+    "CHATSELECTOR": {
+        "Default": "Padrão",
+        "RefreshList": "Atualizar Lista",
+        "Settings": {
+            "ShowSelector": {
+                "Name": "Mostrar Seletor de Chat",
+                "Hint": "Exibe um seletor que permite conversar como um personagem sem selecionar um token."
+            },
+            "SpeakAsToken": {
+                "Name": "Modo Falar como Token",
+                "Hint": "Quando ativado, ele se comportará como se você estivesse falando com o token do personagem selecionado, mesmo que o token não esteja na cena."
+            },
+            "ShowPortrait": {
+                "Name": "Mostrar Avatar no Chat",
+                "Hint": "Exibe o retrato de quem estiver falando nas mensagens de chat."
+            },
+            "PortraitSize": {
+                "Name": "Tamanho da Imagem",
+                "Hint": "Define o tamanho do retrato do chat, em pixels."
+            },
+            "PortraitBorder": {
+                "Name": "Estilo da Borda da Imagem",
+                "Choices": {
+                    "Default": "Padrão",
+                    "None": "Nenhuma",
+                    "Square": "Quadrado",
+                    "Circle": "Círculo",
+                    "minimalist": "Minimalista",
+                    "cyber": "Cyberpunk"
+                }
+            },
+            "PortraitBorderColor": {
+                "Name": "Cor da Borda da Imagem"
+            },
+            "UseUserColor": {
+                "Name": "Usar Cor do Usuário na Borda da Imagem",
+                "Hint": "Usa a cor do usuário como cor da borda da imagem no chat."
+            },
+            "ChatBorderColor": {
+                "Name": "Cor da Borda da Imagem (v12)"
+            },
+            "UseUserBorder": {
+                "Name": "Usar Cor do Usuário na Borda do Chat",
+                "Hint": "Usa a cor do usuário como cor da borda das mensagens de chat. (v12)"
+            },
+            "UseSecondaryColor": {
+                "Name": "Usar Cor Secundária",
+                "Hint": "Usa cores secundárias para gradientes e bordas duplas."
+            },
+            "SecondaryColor": {
+                "Name": "Cor Secundária",
+                "Hint": "Cor usada para gradientes e bordas duplas."
+            },
+            "UseGlowEffect": {
+                "Name": "Use Efeito de Brilho",
+                "Hint": "Aplica um efeito brilhante nas bordas."
+            },
+            "GlowColor": {
+                "Name": "Cor do Efeito de Brilho",
+                "Hint": "Cor usada para o efeito brilhante."
+            },
+            "GlowStrength": {
+                "Name": "Força do Efeito de Brilho",
+                "Hint": "Força do efeito brilhante (0-20)."
+            },
+            "UseHpTint": {
+                "Name": "Mostrar Status do PV",
+                "Hint": "A imagem fica mais vermelha à medida que o PV diminui."
+            },
+            "HpTintIntensity": {
+                "Name": "Intensidade do Status do PV",
+                "Hint": "Define a intensidade do tom vermelho para o status do PV."
+            },
+            "HpCurrentPath": {
+                "Name": "Caminho do PV Atual",
+                "Hint": "Insira o caminho de dados do ator onde o PV atual está armazenado."
+            },
+            "HpMaxPath": {
+                "Name": "Caminho do PV Máximo",
+                "Hint": "Insira o caminho de dados do ator onde o PV máximo está armazenado."
+            },
+            "HidePortrait": {
+            "Name": "Esconder Imagem do D&D5e",
+            "Hint": "Quando ativado, oculta o retrato de chat padrão do D&D5e. Isso ajuda a evitar retratos duplicados ao usar o módulo Character Chat Selector."
+            },
+            "AllowedModuleFlags": {
+                "Name": "Permitir Flags de Módulos",
+                "Hint": "Insira os IDs das flags do módulo, separados por vírgulas, para permitir a exibição em retrato de suas mensagens (por exemplo, foundryvtt-simple-calendar, module-id-2)."
+            },
+            "DropdownBackground": {
+                "Name": "Cor de Fundo da Lista",
+                "Hint": "Define a cor de fundo do menu suspenso da lista de personagens."
+            },
+            "DropdownTextColor": {
+                "Name": "Cor do Texto da Lista",
+                "Hint": "Define a cor do texto do menu suspenso da lista de personagens."
+            },
+            "DropdownBorderColor": {
+                "Name": "Cor da Borda da Lista",
+                "Hint": "Define a cor da borda do menu suspenso da lista de personagens."
+            },
+            "DropdownHoverColor": {
+                "Name": "Cor ao Passar o Mouse na Lista",
+                "Hint": "Define a cor ao passar o mouse em itens do menu suspenso da lista de personagens."
+            },
+            "EnableThumbnailPreview": {
+                "Name": "Habilitar Visualização de Miniaturas",
+                "Hint": "Mostrar uma pré-visualização grande ao passar o mouse sobre as miniaturas dos personagens."
+            },
+            "EnableHotkeys": {
+                "Name": "Habilitar Atalhos para Troca de Atores",
+                "Hint": "Você pode alternar rapidamente os atores usando Ctrl + teclas numéricas/letras."
+            },
+            "HotkeyModifier": {
+                "Name": "Tecla Modificadora de Atalho",
+                "Hint": "Selecione uma tecla modificadora para usar com a tecla de atalho. Tenha cuidado para evitar conflitos com outras teclas de atalho do Foundry."
+            },
+            "HotkeyConfig": {
+                "Instructions": "Clique no campo de entrada de cada ator e pressione a tecla desejada para definir uma tecla de atalho (número ou letra).",
+                "ModifierNote": "A tecla de atalho atribuída será usada com {modifier} (por exemplo, {modifier} + 1)."
+            },
+            "EnableRuby": {
+                "Name": "Ativar Texto Ruby",
+                "Hint": "Habilitar suporte a texto Ruby no chat."
+            },
+            "RubySize": {
+                "Name": "Tamanho do Texto Ruby",
+                "Hint": "Defina o tamanho do texto Ruby em relação ao texto base."
+            },
+            "RubyColor": {
+                "Name": "Cor do Texto Ruby",
+                "Hint": "Definir a cor do texto Ruby."
+            },
+            "ReloadRequired": "Atualize seu navegador para que as alterações entrem em vigor."
+        },
+        "ConfigureHotkeys": "Configurar Atalhos",
+        "HotkeyConfig": {
+        "Title": "Configuração de Atalho para Troca de Ator",
+        "Instructions": "Clique no campo de entrada de cada ator e pressione a tecla desejada para definir uma tecla de atalho.",
+        "ModifierNote": "A tecla de atalho atribuída será usada com a tecla {modifier}."
+        },
+        "Warnings": {
+            "NoName": "Por favor, insira o nome de um Ator.",
+            "NoMatch": "Nenhum Ator correspondente encontrado.",
+            "HotkeyInUse": "{name} já está usando a chave {key}.",
+            "NoMessage": "Por favor, insira uma mensagem após o nome do personagem."
+        },
+        "Info": {
+            "CharacterChanged": "Ator mudou para {name}.",
+            "TempCharacterEnabled": "Conversando como personagem temporário: {name}.",
+            "TempCharacterDisabled": "O modo de personagem temporário foi desativado."
+        }
+    }
+}
