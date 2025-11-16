@@ -95,14 +95,13 @@ export class ChatSelector {
             });
 
         // 액터 변경 감지
-        Hooks.on('createActor', () => {
-            this._updateCharacterList();
-        });
-        Hooks.on('deleteActor', () => {
-            this._updateCharacterList();
-        });
-        Hooks.on('updateActor', () => {
-            this._updateCharacterList();
+        Hooks.on('createActor', () => this.refreshSelector());
+        Hooks.on('deleteActor', () => this.refreshSelector());
+        Hooks.on('updateActor', (actor, changes) => {
+            // 이름이나 소유권이 변경될 때만 목록을 갱신합니다.
+            if (changes.name || changes.ownership) {
+                this.refreshSelector();
+            }
         });
 
         // 채팅 메시지 렌더링 훅 추가
@@ -381,7 +380,7 @@ export class ChatSelector {
         });
 }
 
-    static _createSelector() {
+static _createSelector(initialActorId = null) {
         const chatControls = document.querySelector("#chat-controls");
         if (!chatControls) {
             console.error("ChatSelector | Chat controls not found");
@@ -392,33 +391,54 @@ export class ChatSelector {
             return;
         }
     
-        const currentSpeaker = ChatMessage.getSpeaker();
-    
+        const actors = game.actors
+            .filter(actor => {
+                if (game.user.isGM) return true;
+                return actor.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        const selectedActor = initialActorId ? actors.find(a => a.id === initialActorId) : null;
+        const selectedName = selectedActor ? selectedActor.name : game.i18n.localize("CHATSELECTOR.Default");
+        const finalActorId = selectedActor ? selectedActor.id : "";
+
+        const getCharacterOptionTags = () => {
+            return actors
+                .map(a => `<option value="${a.id}">${a.name}</option>`)
+                .join('');
+        };
+
         const selectorHtml = `
         <div class="character-chat-selector">
             <select class="character-select" style="display: none;">
                 <option value="">${game.i18n.localize("CHATSELECTOR.Default")}</option>
-                ${this._getCharacterOptions(currentSpeaker.actor)}
+                ${getCharacterOptionTags()}
             </select>
             <div class="custom-select">
-                <div class="select-selected">${game.i18n.localize("CHATSELECTOR.Default")}</div>
+                <div class="select-selected">${selectedName}</div>
                 <div class="select-items">
                     <div class="select-item" data-value="">
                         <span>${game.i18n.localize("CHATSELECTOR.Default")}</span>
                     </div>
-                    ${this._getCharacterOptions(currentSpeaker.actor)}
+                    ${this._getCharacterOptions(finalActorId)}
                 </div>
             </div>
             <button class="refresh-characters" title="${game.i18n.localize("CHATSELECTOR.RefreshList")}">
                 <i class="fas fa-sync"></i>
             </button>
-            <button class="configure-hotkeys" title="${game.i18n.localize("CHATSELECTOR.ConfigureHotkeys")}">
+            <button type="button" class="configure-hotkeys" title="${game.i18n.localize("CHATSELECTOR.ConfigureHotkeys")}">
                 <i class="fas fa-keyboard"></i>
             </button>
         </div>
-    `;
+        `;
     
         chatControls.insertAdjacentHTML('beforeend', selectorHtml);
+        
+        const newHiddenSelect = document.querySelector('.character-chat-selector .character-select');
+        if (newHiddenSelect) {
+            newHiddenSelect.value = finalActorId;
+        }
+
         this._addEventListeners();
     }
 
@@ -520,10 +540,10 @@ export class ChatSelector {
         });
     
         if (refreshButton) {
-            refreshButton.addEventListener('click', () => {
-                this._updateCharacterList();
-            });
-        }
+                    refreshButton.addEventListener('click', () => {
+                        this.refreshSelector();
+                    });
+                }
     }
 
     static async _onCharacterSelect(event) {
@@ -790,19 +810,19 @@ export class ChatSelector {
         };
     }
 
-    static _updateCharacterList() {
-        const select = document.querySelector('.character-select');
-        if (!select) {
-            return;
-        }
+    static refreshSelector() {
+            const oldSelector = document.querySelector('.character-chat-selector');
+            if (!oldSelector) return;
 
-        const currentValue = select.value;
-        select.innerHTML = `
-            <option value="">${game.i18n.localize("CHATSELECTOR.Default")}</option>
-            ${this._getCharacterOptions(currentValue)}
-        `;
-        select.value = currentValue;
-    }
+            const hiddenSelect = oldSelector.querySelector('.character-select');
+            const currentValue = hiddenSelect ? hiddenSelect.value : null;
+
+            // 기존 선택기를 DOM에서 제거합니다.
+            oldSelector.remove();
+
+            // 현재 값을 유지하며 선택기를 다시 생성합니다.
+            this._createSelector(currentValue);
+        }
 
     static updateSelector() {
         const existingSelector = document.querySelector('.character-chat-selector');
@@ -892,135 +912,121 @@ export class ChatSelector {
             return tokenImg;
         }
         
-        static async _addPortraitToMessage(message, html, data) {
-            if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
+static async _addPortraitToMessage(message, html, data) {
+    // 공통 초기 검사: 설정이 꺼져있거나, 처리할 메시지 타입이 아니거나, 화자 정보가 없으면 즉시 종료
+    if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
+    const messageStyle = message.style;
+    const isOurMessage = 
+        (messageStyle === CONST.CHAT_MESSAGE_TYPES.IC) ||
+        (messageStyle === CONST.CHAT_MESSAGE_TYPES.EMOTE) ||
+        (messageStyle === CONST.CHAT_MESSAGE_TYPES.OOC) ||
+        (messageStyle === CONST.CHAT_MESSAGE_TYPES.ROLL && !message.flags?.["core"]?.external) ||
+        (messageStyle === CONST.CHAT_MESSAGE_TYPES.WHISPER);
+    if (!isOurMessage || !message.speaker) return;
 
-            const messageStyle = game.version.startsWith('12') ? message.style : message.type;
+    // --- [핵심 수정] ---
+    // 현재 게임 시스템 ID를 확인하여 로직을 분기합니다.
+    if (game.system.id === 'dnd5e') {
+        // ===================================================================
+        // D&D 5e 시스템을 위한 전용 코드 (setTimeout 사용)
+        // ===================================================================
+        setTimeout(async () => {
+            try {
+                const imgSrc = await this._getMessageImage(message);
+                if (!imgSrc) return;
+                const header = html.find('.message-header');
+                if (!header.length) return;
 
-                // 허용된 모듈 플래그 목록 가져오기
-            const allowedFlags = game.settings
-                .get('character-chat-selector', this.SETTINGS.ALLOWED_MODULE_FLAGS)
-                .split(',')
-                .map(flag => flag.trim());
-
-            // 메시지에 플래그가 있는지 확인하고, 허용되지 않은 모듈의 플래그인 경우 포트레잇 추가하지 않음
-            if (message.flags) {
-                const messageFlags = Object.keys(message.flags).filter(flag => 
-                    flag !== 'core' && 
-                    flag !== 'character-chat-selector'
-                );
+                const portraitContainer = this._createPortraitElement(message, imgSrc); // 헬퍼 함수 사용
                 
-                // 허용되지 않은 모듈의 플래그가 있는 경우 포트레잇 추가하지 않음
-                if (messageFlags.length > 0 && 
-                    !messageFlags.some(flag => allowedFlags.includes(flag))) {
-                    return;
+                const existingAvatar = header.find('a.avatar');
+                if (existingAvatar.length > 0) {
+                    existingAvatar.replaceWith(portraitContainer);
+                } else {
+                    header.find('.message-sender').prepend(portraitContainer);
                 }
+                
+                this._applyCommonStyles(html, message, portraitContainer); // 헬퍼 함수 사용
+            } catch (error) {
+                console.error(`[Character-Chat-Selector] D&D5e Portrait Error:`, error);
+            } finally {
+                // [핵심 수정] 포트레잇이 추가되어 높이가 변경된 후, 스크롤을 맨 아래로 강제합니다.
+                ui.chat.scrollBottom();
             }
+        }, 0);
 
-            // 모듈에서 처리하는 메시지 타입인지 확인
-            const isOurMessage = 
-                (messageStyle === CONST.CHAT_MESSAGE_TYPES.IC) ||
-                (messageStyle === CONST.CHAT_MESSAGE_TYPES.EMOTE) ||
-                (messageStyle === CONST.CHAT_MESSAGE_TYPES.OOC) ||
-                (messageStyle === CONST.CHAT_MESSAGE_TYPES.ROLL && !message.flags?.["core"]?.external) ||
-                (messageStyle === CONST.CHAT_MESSAGE_TYPES.WHISPER);
-        
-            if (!isOurMessage) return;
-        
-            const speaker = message.speaker;
-            if (!speaker) return;
-        
-            const header = html.find('.message-header');
-            if (!header.length) return;
-         
-            // 설정값 가져오기
-            const portraitSize = game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_SIZE);
-            const borderStyle = game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER);
-            const useUserColor = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_COLOR);
-            const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
-         
-            // 이미지 소스 가져오기     
+    } else {
+        // ===================================================================
+        // D&D 5e가 아닌 모든 다른 시스템을 위한 원래 코드 (즉시 실행)
+        // ===================================================================
+        try {
             const imgSrc = await this._getMessageImage(message);
             if (!imgSrc) return;
-         
-            // 초상화 컨테이너 생성
-            const portraitContainer = document.createElement('div');
-            portraitContainer.classList.add('chat-portrait-container');
-            portraitContainer.style.setProperty('--portrait-size', `${portraitSize}px`);
-         
-            // 초상화 이미지 생성
-            const img = document.createElement('img');
-            img.src = imgSrc;
-            img.classList.add('chat-portrait');
-         
-            // 스타일 적용
-            portraitContainer.classList.add(`portrait-${borderStyle}`);
-         
-            // CSS 변수 설정
-            const primaryColor = useUserColor ? 
-                (message.author?.color || message.user?.color || '#4b4a44') : 
-                game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER_COLOR);
-            
-            const useSecondaryColor = game.settings.get('character-chat-selector', this.SETTINGS.USE_SECONDARY_COLOR);
-            const useGlowEffect = game.settings.get('character-chat-selector', this.SETTINGS.USE_GLOW_EFFECT);
-         
-            portraitContainer.style.setProperty('--primary-color', primaryColor);
-            portraitContainer.style.setProperty('--secondary-color', useSecondaryColor ? 
-                game.settings.get('character-chat-selector', this.SETTINGS.SECONDARY_COLOR) : primaryColor);
-            portraitContainer.style.setProperty('--glow-color', useGlowEffect ? 
-                game.settings.get('character-chat-selector', this.SETTINGS.GLOW_COLOR) : 'transparent');
-            portraitContainer.style.setProperty('--glow-strength', useGlowEffect ? 
-                `${game.settings.get('character-chat-selector', this.SETTINGS.GLOW_STRENGTH)}px` : '0');
-         
-            // 이벤트 리스너 추가
-            portraitContainer.addEventListener('click', async () => {
-                let sheet = null;
-                if (speakAsToken) {
-                    const token = await this._getToken(speaker);
-                    sheet = token?.actor?.sheet;
-                }
-                if (!sheet) {
-                    const actor = game.actors.get(speaker.actor);
-                    sheet = actor?.sheet;
-                }
-                sheet?.render(true);
-            });
-         
-            // 이미지를 컨테이너에 추가
-            portraitContainer.appendChild(img);
-         
-            // 메시지에 포트레잇 추가
-            header.prepend(portraitContainer);
-         
-            // 채팅 메시지 테두리 색상
-            const useUserBorder = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_BORDER);
-            const chatBorderColor = useUserBorder ? 
-                (message.author?.color || message.user?.color || game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR)) : 
-                game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR);
-         
-            const messageElement = html[0];
-            messageElement.style.borderColor = chatBorderColor;
-         
-            // HP Tint Effect 설정
-            const hookId = HpTintEffect.applyTintToPortrait(portraitContainer, message);
-            
-            // 메시지가 삭제될 때 훅 정리
-            if (hookId) {
-                const observer = new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        if (!document.contains(messageElement)) {
-                            Hooks.off('updateActor', hookId);
-                            observer.disconnect();
-                        }
-                    });
-                });
-         
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true
-                });
+            const header = html.find('.message-header');
+            if (!header.length) return;
+
+            const portraitContainer = this._createPortraitElement(message, imgSrc); // 헬퍼 함수 사용
+
+            const sender = header.find('.message-sender');
+            if (sender.length > 0) {
+                sender.prepend(portraitContainer);
+            } else {
+                header.prepend(portraitContainer);
             }
-         }
+            
+            this._applyCommonStyles(html, message, portraitContainer); // 헬퍼 함수 사용
+        } catch (error) {
+            console.error(`[Character-Chat-Selector] Core Portrait Error:`, error);
+        }
+    }
+}
+
+// --- [헬퍼 함수 추가] ---
+// 중복 코드를 줄이기 위해 포트레잇 엘리먼트를 생성하는 부분을 별도 함수로 분리합니다.
+// 이 함수 두 개를 _addPortraitToMessage 함수 아래에 추가해주세요.
+
+static _createPortraitElement(message, imgSrc) {
+    const portraitSize = game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_SIZE);
+    const borderStyle = game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER);
+    const useUserColor = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_COLOR);
+    const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
+
+    const portraitContainer = document.createElement('div');
+    portraitContainer.classList.add('chat-portrait-container', `portrait-${borderStyle}`);
+    portraitContainer.style.setProperty('--portrait-size', `${portraitSize}px`);
+    
+    const img = document.createElement('img');
+    img.src = imgSrc;
+    img.classList.add('chat-portrait');
+    portraitContainer.appendChild(img);
+    
+    const primaryColor = useUserColor ? (message.author?.color || message.user?.color || '#4b4a44') : game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER_COLOR);
+    portraitContainer.style.setProperty('--primary-color', primaryColor);
+    // (Glow, Secondary color 등 다른 스타일 설정도 여기에 추가할 수 있습니다)
+
+    portraitContainer.addEventListener('click', async () => {
+        const speaker = message.speaker;
+        let sheet = null;
+        if (speakAsToken) {
+            const token = await this._getToken(speaker);
+            sheet = token?.actor?.sheet;
+        }
+        if (!sheet) {
+            const actor = game.actors.get(speaker.actor);
+            sheet = actor?.sheet;
+        }
+        sheet?.render(true);
+    });
+
+    return portraitContainer;
+}
+
+static _applyCommonStyles(html, message, portraitContainer) {
+    const useUserBorder = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_BORDER);
+    const chatBorderColor = useUserBorder ? (message.author?.color || message.user?.color || game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR)) : game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR);
+    html[0].style.borderColor = chatBorderColor;
+    HpTintEffect.applyTintToPortrait(portraitContainer, message);
+}
 
     static _getToken(speaker) {
         if (!speaker.token) return null;

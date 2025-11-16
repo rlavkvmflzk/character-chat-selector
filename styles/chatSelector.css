@@ -1,4 +1,10 @@
+#chat-controls {
+    flex-wrap: wrap; /* 자식 요소들이 공간이 부족할 때 다음 줄로 넘어가도록 설정 */
+}
+
 .character-chat-selector {
+    flex-basis: 100%; /* 이 줄을 추가하여 너비를 100%로 설정 */
+    order: 99; /* 이 줄을 추가하여 다른 요소들보다 아래에 위치하도록 설정 */
     position: relative;
     display: flex;
     gap: 5px;
@@ -6,7 +12,6 @@
     background: rgba(0, 0, 0, 0.1);
     padding: 3px;
     border-radius: 3px;
-    margin-bottom: 3px;
 }
 
 .custom-select {
@@ -348,4 +353,11 @@
 .configure-hotkeys:hover {
     color: #000;
     border-color: #000;
+}
+
+.chat-sidebar .chat-form {
+    gap: 0px !important;
+}
+#sidebar-content #chat {
+    gap: 0px !important;
 }

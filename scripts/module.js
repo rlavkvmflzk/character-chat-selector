@@ -5,6 +5,7 @@ Hooks.once('init', () => {
     console.log('Character Chat Selector: Initializing...');
     ChatSelector.initialize();
     HotkeyManager.initialize();
+    MarkdownHandler.initialize(); // <-- 추가    
 });
 
 // 채팅 메시지 생성 전에 추가 처리

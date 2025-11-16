@@ -1,0 +1,22 @@
+<div class="hotkey-config">
+    <div class="form-group">
+        <label>{{localize "CHATSELECTOR.HotkeyConfig.Instructions"}}</label>
+        <p class="notes">{{localize "CHATSELECTOR.HotkeyConfig.ModifierNote" modifier=modifier}}</p>
+    </div>
+    code
+    Code
+    <div class="character-hotkeys">
+        {{#each characters}}
+        <div class="character-hotkey-row">
+            <img src="{{this.img}}" width="36" height="36">
+            <span class="character-name">{{this.name}}</span>
+            <div class="hotkey-controls">
+                <input type="text" class="hotkey-input" value="{{this.hotkey}}" data-actor-id="{{this.id}}" readonly>
+                <button type="button" class="clear-hotkey" data-actor-id="{{this.id}}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>

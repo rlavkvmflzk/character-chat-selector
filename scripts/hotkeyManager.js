@@ -1,10 +1,10 @@
 export class HotkeyManager {
     static ID = 'character-chat-selector';
-    
+
     static initialize() {
         console.log('HotkeyManager: Initializing...');
         this.registerSettings();
-        
+
         if (game.settings.get(this.ID, 'enableHotkeys')) {
             console.log('HotkeyManager: Hotkeys enabled, registering bindings...');
             this.registerHotkeyBindings();
@@ -52,9 +52,9 @@ export class HotkeyManager {
                 "Control+Alt": "Ctrl+Alt",
                 "Shift": "Shift"
             },
-            default: "Control"  // 기본값을 Ctrl로 변경
+            default: "Control"
         });
-        
+
 
         // 단축키 바인딩 저장
         game.settings.register(this.ID, 'hotkeyBindings', {
@@ -69,12 +69,6 @@ export class HotkeyManager {
     static registerHotkeyBindings() {
         console.log('HotkeyManager: Registering hotkey event handler...');
         $(document).off('keydown.characterHotkeys').on('keydown.characterHotkeys', (event) => {
-            console.log('HotkeyManager: Keydown event detected:', {
-                key: event.key,
-                ctrl: event.ctrlKey,
-                alt: event.altKey,
-                shift: event.shiftKey
-            });
             this._handleHotkey(event);
         });
     }
@@ -86,11 +80,11 @@ export class HotkeyManager {
 
     static _handleHotkey(event) {
         if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
-    
+
         const modifier = game.settings.get(this.ID, 'hotkeyModifier');
         let validModifier = false;
-    
-        switch(modifier) {
+
+        switch (modifier) {
             case 'Control':
                 validModifier = event.ctrlKey && !event.altKey && !event.shiftKey;
                 break;
@@ -104,9 +98,9 @@ export class HotkeyManager {
                 validModifier = event.shiftKey && !event.ctrlKey && !event.altKey;
                 break;
         }
-    
+
         if (!validModifier) return;
-    
+
         // Shift키와 함께 눌렸을 때 원래 숫자키 값을 복원
         let key = event.key.toUpperCase();
         if (event.shiftKey) {
@@ -124,10 +118,10 @@ export class HotkeyManager {
             };
             key = shiftKeyMap[key] || key;
         }
-    
+
         const bindings = game.settings.get(this.ID, 'hotkeyBindings');
         const actorId = Object.entries(bindings).find(([_, hotkey]) => hotkey === key)?.[0];
-    
+
         if (actorId) {
             event.preventDefault();
             this._switchCharacter(actorId);
@@ -137,7 +131,7 @@ export class HotkeyManager {
     static async _switchCharacter(actorId) {
         const actor = game.actors.get(actorId);
         if (!actor) return;
-    
+
         // 드롭다운 UI 업데이트
         const customSelect = document.querySelector('.custom-select');
         if (customSelect) {
@@ -145,7 +139,7 @@ export class HotkeyManager {
             if (selectedDiv) {
                 selectedDiv.textContent = actor.name;
             }
-            
+
             // select-items 내의 선택된 항목 표시 업데이트
             const items = customSelect.querySelectorAll('.select-item');
             items.forEach(item => {
@@ -156,19 +150,19 @@ export class HotkeyManager {
                 }
             });
         }
-    
+
         // 숨겨진 select 엘리먼트 업데이트
         const select = document.querySelector('.character-select');
         if (select) {
             select.value = actorId;
         }
-    
+
         // 캐릭터 전환 이벤트 발생
         const customEvent = new CustomEvent('characterHotkeySwitch', {
             detail: { actorId: actorId }
         });
         document.dispatchEvent(customEvent);
-    
+
         // 알림 표시
         ui.notifications.info(game.i18n.format("CHATSELECTOR.Info.CharacterChanged", {
             name: actor.name
@@ -189,7 +183,7 @@ class HotkeyConfigDialog extends FormApplication {
             title: game.i18n.localize("CHATSELECTOR.HotkeyConfig.Title"),
             template: "modules/character-chat-selector/templates/hotkey-config.html",
             width: 400,
-            height: "auto",
+            // height: "auto" 옵션이 없는지 다시 한번 확인합니다.
             closeOnSubmit: true
         });
     }
@@ -217,8 +211,17 @@ class HotkeyConfigDialog extends FormApplication {
     activateListeners(html) {
         super.activateListeners(html);
 
-        html.find('.hotkey-input').on('keydown', this._onHotkeyPress.bind(this));
-        html.find('.clear-hotkey').on('click', this._onClearHotkey.bind(this));
+        // html 파라미터는 jQuery 객체이므로, 첫 번째 DOM 요소를 가져오기 위해 html[0]을 사용합니다.
+        // 이 DOM 요소는 이제 <div class="hotkey-config">가 됩니다.
+        const formElement = html[0];
+
+        formElement.querySelectorAll('.hotkey-input').forEach(input => {
+            input.addEventListener('keydown', this._onHotkeyPress.bind(this));
+        });
+
+        formElement.querySelectorAll('.clear-hotkey').forEach(button => {
+            button.addEventListener('click', this._onClearHotkey.bind(this));
+        });
     }
 
     async _onHotkeyPress(event) {
@@ -229,11 +232,10 @@ class HotkeyConfigDialog extends FormApplication {
         if (/^[0-9A-Z]$/.test(key)) {
             const actorId = input.dataset.actorId;
             const bindings = game.settings.get(HotkeyManager.ID, 'hotkeyBindings');
-            
-            // 이미 사용 중인 키인지 확인
+
             const existingActor = Object.entries(bindings)
                 .find(([id, k]) => k === key && id !== actorId)?.[0];
-            
+
             if (existingActor) {
                 const actor = game.actors.get(existingActor);
                 ui.notifications.warn(game.i18n.format("CHATSELECTOR.Warnings.HotkeyInUse", {
@@ -243,7 +245,7 @@ class HotkeyConfigDialog extends FormApplication {
                 return;
             }
 
-            input.value = key;
+            input.value = key; // jQuery .val() 대신 .value 사용
             bindings[actorId] = key;
             await game.settings.set(HotkeyManager.ID, 'hotkeyBindings', bindings);
         }
@@ -251,8 +253,11 @@ class HotkeyConfigDialog extends FormApplication {
 
     async _onClearHotkey(event) {
         const actorId = event.currentTarget.dataset.actorId;
-        const input = this.element.find(`.hotkey-input[data-actor-id="${actorId}"]`);
-        input.val('');
+        // this.element.find(...) 대신 querySelector를 사용하여 안정성 확보
+        const input = this.element[0].querySelector(`.hotkey-input[data-actor-id="${actorId}"]`);
+        if (input) {
+            input.value = ''; // jQuery .val('') 대신 .value 사용
+        }
 
         const bindings = game.settings.get(HotkeyManager.ID, 'hotkeyBindings');
         delete bindings[actorId];
