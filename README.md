@@ -2,6 +2,7 @@
 
 **If you enjoy this free module, please consider supporting me on Patreon!**
 By supporting, you get access to exclusive premium modules like the fully functional **Smartphone Widget** 📱.
+
 ➡️ **Patreon:** https://www.patreon.com/cw/glitchsmith
 
 ---
