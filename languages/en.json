@@ -2,7 +2,14 @@
     "CHATSELECTOR": {
         "Default": "Default",
         "RefreshList": "Refresh List",
+        "Edit": "Edit",
+        "Save": "Save",
+        "Cancel": "Cancel",        
         "Settings": {
+            "AllowPersonalThemes": {
+                "Name": "Allow Personal Themes",
+                "Hint": "If enabled, player's custom portrait styles (borders, glow, etc.) will be visible to everyone. If disabled, your local settings will apply to all messages."
+            },            
             "ShowSelector": {
                 "Name": "Show Chat Selector",
                 "Hint": "Displays a selector that allows chatting as a character without selecting a token."
@@ -53,12 +60,12 @@
                 "Hint": "Color used for gradients and double borders"
             },
             "UseGlowEffect": {
-                "Name": "Use Glow Effect",
-                "Hint": "Apply a glowing effect to borders"
+                "Name": "Use Energy Border",
+                "Hint": "Applies a rotating energy effect along the border"
             },
             "GlowColor": {
-                "Name": "Glow Effect Color",
-                "Hint": "Color used for the glowing effect"
+                "Name": "Energy Color",
+                "Hint": "Color of the rotating energy"
             },
             "GlowStrength": {
                 "Name": "Glow Effect Strength",

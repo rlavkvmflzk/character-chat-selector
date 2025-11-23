@@ -3,8 +3,12 @@
         <label>{{localize "CHATSELECTOR.HotkeyConfig.Instructions"}}</label>
         <p class="notes">{{localize "CHATSELECTOR.HotkeyConfig.ModifierNote" modifier=modifier}}</p>
     </div>
-    code
-    Code
+    
+    <div class="form-group search-container">
+        <input type="text" class="search-input" placeholder="Search..." autocomplete="off">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+
     <div class="character-hotkeys">
         {{#each characters}}
         <div class="character-hotkey-row">

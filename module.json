@@ -2,30 +2,33 @@
     "id": "character-chat-selector",
     "title": "Character Chat Selector",
     "description": "Provides a tokenless selector for Actors in your scene to chat with, as well as chat message customization.",
-    "version": "2.1.1",
+    "version": "3.0",
     "compatibility": {
-        "minimum": "11",
+        "minimum": "13",
         "verified": "13",
         "maximum": "13"
     },
+    "scripts": [
+        "https://cdn.jsdelivr.net/npm/marked/marked.min.js",
+        "https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"
+    ],    
     "authors": [
       {
         "name": "rlavkvmflzk"
       }
     ],
     "relationships": {
-      "requires": [
-          {
-              "id": "color-picker",
-              "type": "module"
-          }
-      ]
-  },
+      "requires": [] 
+    },
     "esmodules": [
       "scripts/module.js",
       "scripts/chatSelector.js",
       "scripts/hpTintEffect.js",
-      "scripts/dnd5ePortraitHandler.js"
+      "scripts/dnd5ePortraitHandler.js",
+      "scripts/hotkeyManager.js",
+      "scripts/chatEditor.js",
+      "scripts/rubyTextHandler.js",
+      "scripts/chatAutocomplete.js"
     ],
     "styles": [
       "styles/chatSelector.css"
@@ -45,16 +48,11 @@
         "lang": "en",
         "name": "English",
         "path": "languages/en.json"
-      },
-      {
-        "lang": "pt-BR",
-        "name": "Português (Brasil)",
-        "path": "languages/pt-BR.json"
-      }      
+      }
     ],
     "url": "https://github.com/rlavkvmflzk/character-chat-selector",
     "manifest": "https://github.com/rlavkvmflzk/character-chat-selector/releases/latest/download/module.json",
-    "download": "https://github.com/rlavkvmflzk/character-chat-selector/releases/download/2.1.1/module.zip",
+    "download": "https://github.com/rlavkvmflzk/character-chat-selector/releases/download/3.0/module.zip",
     "bugs": "https://github.com/rlavkvmflzk/character-chat-selector/issues",
     "readme": "README.md"
 }

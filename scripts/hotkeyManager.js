@@ -1,19 +1,18 @@
-export class HotkeyManager {
-    static ID = 'character-chat-selector';
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
+export class HotkeyManager {
     static initialize() {
-        console.log('HotkeyManager: Initializing...');
+        console.log('Character Chat Selector | Initializing HotkeyManager...');
+        
         this.registerSettings();
 
-        if (game.settings.get(this.ID, 'enableHotkeys')) {
-            console.log('HotkeyManager: Hotkeys enabled, registering bindings...');
+        // 초기 실행 시 체크
+        if (game.settings.get('character-chat-selector', 'enableHotkeys')) {
             this.registerHotkeyBindings();
         }
 
-        // 설정 변경 감지
         Hooks.on('closeSettingsConfig', () => {
-            console.log('HotkeyManager: Settings closed, checking hotkey status...');
-            if (game.settings.get(this.ID, 'enableHotkeys')) {
+            if (game.settings.get('character-chat-selector', 'enableHotkeys')) {
                 this.registerHotkeyBindings();
             } else {
                 this.unregisterHotkeyBindings();
@@ -22,8 +21,10 @@ export class HotkeyManager {
     }
 
     static registerSettings() {
-        // 단축키 활성화 설정
-        game.settings.register(this.ID, 'enableHotkeys', {
+        const MODULE_ID = 'character-chat-selector';
+
+        // 기능 활성화 여부는 클라이언트 설정(PC별 설정)으로 남겨두는 것이 일반적입니다.
+        game.settings.register(MODULE_ID, 'enableHotkeys', {
             name: game.i18n.localize("CHATSELECTOR.Settings.EnableHotkeys.Name"),
             hint: game.i18n.localize("CHATSELECTOR.Settings.EnableHotkeys.Hint"),
             scope: "client",
@@ -31,16 +32,12 @@ export class HotkeyManager {
             type: Boolean,
             default: false,
             onChange: value => {
-                if (value) {
-                    this.registerHotkeyBindings();
-                } else {
-                    this.unregisterHotkeyBindings();
-                }
+                if (value) this.registerHotkeyBindings();
+                else this.unregisterHotkeyBindings();
             }
         });
 
-        // 단축키 보조키 설정
-        game.settings.register(this.ID, 'hotkeyModifier', {
+        game.settings.register(MODULE_ID, 'hotkeyModifier', {
             name: game.i18n.localize("CHATSELECTOR.Settings.HotkeyModifier.Name"),
             hint: game.i18n.localize("CHATSELECTOR.Settings.HotkeyModifier.Hint"),
             scope: "client",
@@ -55,75 +52,51 @@ export class HotkeyManager {
             default: "Control"
         });
 
-
-        // 단축키 바인딩 저장
-        game.settings.register(this.ID, 'hotkeyBindings', {
-            scope: "client",
-            config: false,
-            type: Object,
-            default: {}
-        });
+        // [삭제됨] hotkeyBindings 설정 등록 코드를 제거합니다.
+        // 대신 아래 로직들에서 game.user.getFlag()를 사용합니다.
+        
+        console.log('Character Chat Selector | Hotkey settings registered.');
     }
 
-    // 단축키 이벤트 핸들러 등록
     static registerHotkeyBindings() {
-        console.log('HotkeyManager: Registering hotkey event handler...');
         $(document).off('keydown.characterHotkeys').on('keydown.characterHotkeys', (event) => {
             this._handleHotkey(event);
         });
     }
 
-    // 단축키 이벤트 핸들러 제거
     static unregisterHotkeyBindings() {
         $(document).off('keydown.characterHotkeys');
     }
 
     static _handleHotkey(event) {
-        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target.isContentEditable) return;
 
-        const modifier = game.settings.get(this.ID, 'hotkeyModifier');
+        const modifier = game.settings.get('character-chat-selector', 'hotkeyModifier');
         let validModifier = false;
 
         switch (modifier) {
-            case 'Control':
-                validModifier = event.ctrlKey && !event.altKey && !event.shiftKey;
-                break;
-            case 'Control+Shift':
-                validModifier = event.ctrlKey && event.shiftKey && !event.altKey;
-                break;
-            case 'Control+Alt':
-                validModifier = event.ctrlKey && event.altKey && !event.shiftKey;
-                break;
-            case 'Shift':
-                validModifier = event.shiftKey && !event.ctrlKey && !event.altKey;
-                break;
+            case 'Control': validModifier = event.ctrlKey && !event.altKey && !event.shiftKey; break;
+            case 'Control+Shift': validModifier = event.ctrlKey && event.shiftKey && !event.altKey; break;
+            case 'Control+Alt': validModifier = event.ctrlKey && event.altKey && !event.shiftKey; break;
+            case 'Shift': validModifier = event.shiftKey && !event.ctrlKey && !event.altKey; break;
         }
 
         if (!validModifier) return;
 
-        // Shift키와 함께 눌렸을 때 원래 숫자키 값을 복원
         let key = event.key.toUpperCase();
         if (event.shiftKey) {
-            const shiftKeyMap = {
-                '!': '1',
-                '@': '2',
-                '#': '3',
-                '$': '4',
-                '%': '5',
-                '^': '6',
-                '&': '7',
-                '*': '8',
-                '(': '9',
-                ')': '0'
-            };
+            const shiftKeyMap = { '!': '1', '@': '2', '#': '3', '$': '4', '%': '5', '^': '6', '&': '7', '*': '8', '(': '9', ')': '0' };
             key = shiftKeyMap[key] || key;
         }
 
-        const bindings = game.settings.get(this.ID, 'hotkeyBindings');
+        // [변경됨] Settings 대신 User Flag에서 데이터를 가져옵니다.
+        const bindings = game.user.getFlag('character-chat-selector', 'hotkeyBindings') || {};
+        
         const actorId = Object.entries(bindings).find(([_, hotkey]) => hotkey === key)?.[0];
 
         if (actorId) {
             event.preventDefault();
+            event.stopPropagation();
             this._switchCharacter(actorId);
         }
     }
@@ -132,65 +105,58 @@ export class HotkeyManager {
         const actor = game.actors.get(actorId);
         if (!actor) return;
 
-        // 드롭다운 UI 업데이트
         const customSelect = document.querySelector('.custom-select');
         if (customSelect) {
             const selectedDiv = customSelect.querySelector('.select-selected');
-            if (selectedDiv) {
-                selectedDiv.textContent = actor.name;
-            }
+            if (selectedDiv) selectedDiv.textContent = actor.name;
 
-            // select-items 내의 선택된 항목 표시 업데이트
-            const items = customSelect.querySelectorAll('.select-item');
-            items.forEach(item => {
-                if (item.dataset.value === actorId) {
-                    item.classList.add('selected');
-                } else {
-                    item.classList.remove('selected');
-                }
+            customSelect.querySelectorAll('.select-item').forEach(item => {
+                if (item.dataset.value === actorId) item.classList.add('selected');
+                else item.classList.remove('selected');
             });
         }
 
-        // 숨겨진 select 엘리먼트 업데이트
         const select = document.querySelector('.character-select');
-        if (select) {
-            select.value = actorId;
-        }
+        if (select) select.value = actorId;
 
-        // 캐릭터 전환 이벤트 발생
-        const customEvent = new CustomEvent('characterHotkeySwitch', {
-            detail: { actorId: actorId }
-        });
-        document.dispatchEvent(customEvent);
+        document.dispatchEvent(new CustomEvent('characterHotkeySwitch', { detail: { actorId } }));
 
-        // 알림 표시
-        ui.notifications.info(game.i18n.format("CHATSELECTOR.Info.CharacterChanged", {
-            name: actor.name
-        }));
+        ui.notifications.info(game.i18n.format("CHATSELECTOR.Info.CharacterChanged", { name: actor.name }));
     }
 
-    // 단축키 설정 UI 표시
     static showConfig() {
         new HotkeyConfigDialog().render(true);
     }
 }
 
-// 단축키 설정 다이얼로그
-class HotkeyConfigDialog extends FormApplication {
-    static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
-            id: 'hotkey-config',
-            title: game.i18n.localize("CHATSELECTOR.HotkeyConfig.Title"),
-            template: "modules/character-chat-selector/templates/hotkey-config.html",
-            width: 400,
-            // height: "auto" 옵션이 없는지 다시 한번 확인합니다.
-            closeOnSubmit: true
-        });
+class HotkeyConfigDialog extends HandlebarsApplicationMixin(ApplicationV2) {
+    static DEFAULT_OPTIONS = {
+        tag: "form",
+        id: "hotkey-config",
+        classes: ["hotkey-config-window", "hotkey-config"],
+        window: {
+            icon: "fas fa-keyboard",
+            resizable: false,
+            title: "CHATSELECTOR.HotkeyConfig.Title"
+        },
+        position: { width: 400, height: "auto" },
+        form: { handler: HotkeyConfigDialog.onSubmit, closeOnSubmit: true }
+    };
+
+    static PARTS = {
+        form: { template: "modules/character-chat-selector/templates/hotkey-config.html" }
+    };
+
+    get title() {
+        return game.i18n.localize("CHATSELECTOR.HotkeyConfig.Title");
     }
 
-    getData() {
-        const bindings = game.settings.get(HotkeyManager.ID, 'hotkeyBindings');
-        const modifier = game.settings.get(HotkeyManager.ID, 'hotkeyModifier');
+    async _prepareContext(options) {
+        const MODULE_ID = 'character-chat-selector';
+        
+        // [변경됨] Settings -> User Flags
+        const bindings = game.user.getFlag(MODULE_ID, 'hotkeyBindings') || {};
+        const modifier = game.settings.get(MODULE_ID, 'hotkeyModifier');
 
         const characters = game.actors
             .filter(a => a.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)
@@ -202,42 +168,60 @@ class HotkeyConfigDialog extends FormApplication {
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
 
-        return {
-            characters,
-            modifier
-        };
+        return { characters, modifier };
     }
 
-    activateListeners(html) {
-        super.activateListeners(html);
-
-        // html 파라미터는 jQuery 객체이므로, 첫 번째 DOM 요소를 가져오기 위해 html[0]을 사용합니다.
-        // 이 DOM 요소는 이제 <div class="hotkey-config">가 됩니다.
-        const formElement = html[0];
-
-        formElement.querySelectorAll('.hotkey-input').forEach(input => {
+    _onRender(context, options) {
+        // 기존 이벤트 리스너들
+        this.element.querySelectorAll('.hotkey-input').forEach(input => {
             input.addEventListener('keydown', this._onHotkeyPress.bind(this));
         });
 
-        formElement.querySelectorAll('.clear-hotkey').forEach(button => {
+        this.element.querySelectorAll('.clear-hotkey').forEach(button => {
             button.addEventListener('click', this._onClearHotkey.bind(this));
         });
+
+        // [추가됨] 검색 기능 로직
+        const searchInput = this.element.querySelector('.search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (event) => {
+                const query = event.target.value.toLowerCase();
+                const rows = this.element.querySelectorAll('.character-hotkey-row');
+
+                rows.forEach(row => {
+                    const name = row.querySelector('.character-name').textContent.toLowerCase();
+                    // 이름에 검색어가 포함되어 있으면 보이고(flex), 없으면 숨김(none)
+                    if (name.includes(query)) {
+                        row.style.display = 'flex';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 편의성: 창 열리면 검색창에 자동 포커스 (선택사항)
+            // setTimeout(() => searchInput.focus(), 50);
+        }
     }
 
     async _onHotkeyPress(event) {
         event.preventDefault();
         const input = event.currentTarget;
         const key = event.key.toUpperCase();
+        const MODULE_ID = 'character-chat-selector';
 
         if (/^[0-9A-Z]$/.test(key)) {
             const actorId = input.dataset.actorId;
-            const bindings = game.settings.get(HotkeyManager.ID, 'hotkeyBindings');
+            // [변경됨] Settings -> User Flags
+            const bindings = game.user.getFlag(MODULE_ID, 'hotkeyBindings') || {};
+            // 불변성 유지를 위해 복사본 생성
+            const newBindings = { ...bindings };
 
-            const existingActor = Object.entries(bindings)
+            const existingActorId = Object.entries(newBindings)
                 .find(([id, k]) => k === key && id !== actorId)?.[0];
 
-            if (existingActor) {
-                const actor = game.actors.get(existingActor);
+            if (existingActorId) {
+                const actor = game.actors.get(existingActorId);
                 ui.notifications.warn(game.i18n.format("CHATSELECTOR.Warnings.HotkeyInUse", {
                     key: key,
                     name: actor?.name || 'Unknown'
@@ -245,22 +229,32 @@ class HotkeyConfigDialog extends FormApplication {
                 return;
             }
 
-            input.value = key; // jQuery .val() 대신 .value 사용
-            bindings[actorId] = key;
-            await game.settings.set(HotkeyManager.ID, 'hotkeyBindings', bindings);
+            input.value = key;
+            newBindings[actorId] = key;
+            
+            // [변경됨] setFlag 사용
+            await game.user.setFlag(MODULE_ID, 'hotkeyBindings', newBindings);
         }
     }
 
     async _onClearHotkey(event) {
+        const MODULE_ID = 'character-chat-selector';
         const actorId = event.currentTarget.dataset.actorId;
-        // this.element.find(...) 대신 querySelector를 사용하여 안정성 확보
-        const input = this.element[0].querySelector(`.hotkey-input[data-actor-id="${actorId}"]`);
-        if (input) {
-            input.value = ''; // jQuery .val('') 대신 .value 사용
-        }
+        const input = this.element.querySelector(`.hotkey-input[data-actor-id="${actorId}"]`);
+        if (input) input.value = '';
 
-        const bindings = game.settings.get(HotkeyManager.ID, 'hotkeyBindings');
-        delete bindings[actorId];
-        await game.settings.set(HotkeyManager.ID, 'hotkeyBindings', bindings);
+        // [변경됨] Settings -> User Flags
+        const bindings = game.user.getFlag(MODULE_ID, 'hotkeyBindings') || {};
+        
+        if (bindings[actorId]) {
+            const newBindings = { ...bindings };
+            delete newBindings[actorId]; // flag에서 키 삭제를 위해 -null 대신 delete 후 재저장 권장
+            
+            // [변경됨] setFlag 사용
+            // 키를 완전히 제거하기 위해 unsetFlag를 쓰거나 객체를 덮어씀
+            await game.user.setFlag(MODULE_ID, 'hotkeyBindings', newBindings);
+        }
     }
+
+    static async onSubmit(event, form, formData) { return; }
 }

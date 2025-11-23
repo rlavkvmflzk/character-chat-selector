@@ -220,27 +220,51 @@
     transform: rotate(-2deg);
 }
 
-/* 사이버펑크 스타일 */
+/* 사이버펑크 스타일 (수정됨) */
 .portrait-cyber {
     position: relative;
-    border: 3px solid var(--primary-color);
+    /* [핵심 1] border 대신 padding과 background로 테두리를 만듭니다 */
+    border: none !important;
+    padding: 3px; /* 이게 테두리 두께가 됩니다 */
+    background: var(--primary-color); /* 이게 테두리 색상이 됩니다 */
+    
+    /* [핵심 2] 모양 깎기 (8각형) */
     clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
-    box-shadow: 0 0 var(--glow-strength) var(--glow-color);
+    
+    /* [핵심 3] 잘린 모양에 그림자를 주려면 box-shadow 대신 filter를 써야 합니다 */
+    box-shadow: none !important;
+    filter: drop-shadow(0 0 var(--glow-strength) var(--glow-color));
 }
 
+/* 내부 이미지 스타일 조정 */
+.portrait-cyber img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+    
+    /* 이미지도 부모와 똑같이 깎아줘야 깔끔하게 나옵니다 */
+    clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
+}
+
+/* 사이버펑크 스타일의 오버레이 효과 (선택사항) */
 .portrait-cyber::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, 
-        var(--primary-color)20, 
-        var(--secondary-color)20
+    /* 테두리(padding) 안쪽으로 오버레이가 들어가도록 조정 */
+    inset: 3px; 
+    
+    background: linear-gradient(135deg, 
+        transparent 40%,
+        var(--primary-color) 50%, 
+        transparent 60%
     );
-    opacity: var(--use-secondary-color, 0);
+    opacity: 0.2; /* 은은한 반사광 */
     pointer-events: none;
+    
+    /* 오버레이도 깎아줍니다 */
+    clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
 }
 
 /* 호버 효과 */
@@ -287,6 +311,9 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 400px;    
+    overflow-y: auto;     
+    padding-right: 5px;  
 }
 
 .hotkey-config .character-hotkey-row {
@@ -356,8 +383,250 @@
 }
 
 .chat-sidebar .chat-form {
-    gap: 0px !important;
+    gap: 1px !important;
 }
 #sidebar-content #chat {
-    gap: 0px !important;
+    gap: 1px !important;
+}
+
+/* 핫키 설정창 검색바 스타일 */
+.hotkey-config .search-container {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.hotkey-config .search-input {
+    width: 100%;
+    padding: 8px 30px 8px 10px; /* 아이콘 공간 확보 */
+    border: 1px solid #7a7971;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    color:#333;
+}
+
+.hotkey-config .search-input:focus {
+    outline: none;
+    box-shadow: 0 0 5px var(--color-shadow-highlight);
+}
+
+.hotkey-config .search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    pointer-events: none; /* 아이콘 클릭 방지 */
+}
+
+/* 다크 모드 대응 (필요한 경우) */
+:root[data-theme="dark"] .hotkey-config .search-input {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f0f0f0;
+    border-color: #555;
+}
+/* === ⚡️ 에너지 테두리 (Energy Border) - 안전한 레이어링 버전 === */
+
+@property --gradient-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes rotation {
+    0% { --gradient-angle: 0deg; }
+    100% { --gradient-angle: 360deg; }
+}
+
+/* 1. [공통] 컨테이너 */
+.chat-portrait-container.animated-glow {
+    position: relative;
+    /* 기존 border 제거 */
+    border: none !important; 
+    
+    /* 패딩 = 빔 두께 */
+    padding: 3px;
+    
+    /* z-index 문맥 생성 (중요) */
+    z-index: 0;
+    isolation: isolate;
+    
+    /* 회전 등 변형 유지 */
+    transform-style: preserve-3d;
+}
+
+/* 2. [공통] 에너지 빔 (Beam) - 레이어 1 */
+.chat-portrait-container.animated-glow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    
+    /* [수정] 마이너스 대신 양수 사용. 이미지보다 밑에, 배경보다 위에. */
+    z-index: -1; 
+    
+    border-radius: inherit; 
+    background: conic-gradient(
+        from var(--gradient-angle),
+        var(--primary-color) 0%,    
+        var(--primary-color) 60%,   
+        var(--glow-color) 85%,      
+        #ffffff 95%,                
+        var(--primary-color) 100%   
+    );
+    animation: rotation 1.5s linear infinite;
+}
+
+/* 3. [공통] 빛 번짐 (Bloom) - 레이어 0 (맨 뒤) */
+.chat-portrait-container.animated-glow::after {
+    content: "";
+    position: absolute;
+    inset: -3px; 
+    
+    /* [수정] 빔보다 뒤 */
+    z-index: -2; 
+    
+    border-radius: inherit; 
+    background: conic-gradient(
+        from var(--gradient-angle),
+        transparent 0%,
+        transparent 60%,        
+        var(--glow-color) 85%,  
+        var(--glow-color) 100%
+    );
+    filter: blur(var(--glow-strength, 8px));
+    opacity: 0.8;
+    animation: rotation 1.5s linear infinite;
+}
+
+/* 4. [공통] 이미지 - 레이어 2 (맨 위) */
+.chat-portrait-container.animated-glow img.chat-portrait {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    
+    /* [수정] 빔보다 무조건 위에 오도록 설정 */
+    z-index: 10; 
+    
+    /* 투명한 부분이 있으면 빔이 비치므로 배경색 지정 */
+    background: #222; 
+}
+
+
+/* === [스타일별 개성 복구] === */
+
+/* 1. 미니멀리스트 (Minimalist) */
+.portrait-minimalist.animated-glow {
+    transform: rotate(-2deg) !important;
+    background: #fff !important; /* 흰색 폴라로이드 배경 */
+    padding: 3px;
+    box-shadow: 5px 5px 0 var(--secondary-color) !important;
+    border-radius: 2px;
+}
+/* 미니멀리스트는 흰 배경 위에 빔이 그려져야 함 */
+/* z-index: -1인 before는 background: #fff 위에 그려짐 (Stacking Context 규칙) */
+
+
+/* 2. 사각형 (Square) */
+.portrait-square.animated-glow {
+    border-radius: 2px;
+    padding: 3px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3) !important;
+}
+
+
+/* 3. 원형 (Circle) */
+.portrait-circle.animated-glow {
+    border-radius: 50%;
+    padding: 3px;
+}
+
+
+/* 4. 사이버펑크 (Cyberpunk) */
+.portrait-cyber.animated-glow {
+    border-radius: 0;
+    padding: 3px;
+    background: transparent !important;
+}
+.portrait-cyber.animated-glow::before,
+.portrait-cyber.animated-glow img.chat-portrait {
+    clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
+}
+.portrait-cyber.animated-glow::after {
+    clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
+    filter: drop-shadow(0 0 var(--glow-strength) var(--glow-color));
+    inset: 0;
+    background: transparent;
+}
+
+
+/* 5. 기본 (Default) */
+.portrait-default.animated-glow {
+    border-radius: 12%;
+    padding: 3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
+}
+
+/* Polyglot 모듈 호환성 패치 */
+/* 사이드바(채팅창) 내부에 있는 Polyglot만 콕 집어서 마진 제거 */
+#sidebar .polyglot.polyglot-lang-select {
+    margin: 0 !important;
+}
+
+/* (혹시 채팅창을 팝아웃으로 따로 뺐을 때도 적용되게 하려면 이것도 추가) */
+#chat-popout .polyglot.polyglot-lang-select {
+    margin: 0 !important;
+}
+
+
+
+/* 자동완성 팝업 스타일 - Body 부착용 */
+.autocomplete-list {
+    /* position: fixed;  <-- JS에서 동적으로 좌표와 함께 할당함 */
+    /* bottom, left 등도 JS가 제어함 */
+    
+    max-height: 250px;
+    
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8); /* 그림자 진하게 */
+    
+    z-index: 100;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    
+    /* 폰트 가독성 */
+    font-family: var(--font-primary);
+}
+
+.autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #e0e0e0;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+    background: #1e1e1e;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover, 
+.autocomplete-item.active {
+    background-color: #4a7cce;
+    color: #fff;
+}
+
+.autocomplete-item img {
+    border-radius: 4px;
+    object-fit: cover;
+    background: #000;
+    flex-shrink: 0;
 }
