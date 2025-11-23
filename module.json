@@ -48,7 +48,12 @@
         "lang": "en",
         "name": "English",
         "path": "languages/en.json"
-      }
+      },
+      {
+        "lang": "pt-BR",
+        "name": "Português (Brasil)",
+        "path": "languages/pt-BR.json"
+      }      
     ],
     "url": "https://github.com/rlavkvmflzk/character-chat-selector",
     "manifest": "https://github.com/rlavkvmflzk/character-chat-selector/releases/latest/download/module.json",
