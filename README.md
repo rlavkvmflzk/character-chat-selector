@@ -1,22 +1,39 @@
-## Overview
-Character Chat Selector enhances Foundry VTT's chat interface by providing a convenient character selector and customizable chat portraits. Players and GMs can easily speak as any of their characters, even without tokens on the scene.
+**Enhance your Foundry VTT chat experience with Character Chat Selector!** This module allows you to speak as any character without needing a token on the scene, featuring customizable portraits, animated effects, and rich text support.
 
-## Key Features
+**If you enjoy this free module, please consider supporting me on Patreon!**
+By supporting, you get access to exclusive premium modules like the fully functional **Smartphone Widget** 📱.
+➡️ **Patreon:** https://www.patreon.com/cw/glitchsmith
 
-### Tokenless Chat
-- Speak as any owned character without needing tokens on the scene
-- You can choose to have your chat messages display properly in token style even if you don't place a token  
-- Seamlessly switch between characters using a quick dropdown menu
+---
 
-### Visual Customization
-- Customizable chat portraits with different border styles
-- Adjustable portrait sizes and borders
-- Character sheet access via portrait click
-- Custom border colors with user color integration
+### **MODULE OVERVIEW**
+Character Chat Selector enhances Foundry VTT's interface by providing a convenient character selector and customizable chat portraits. Players and GMs can easily speak as any of their characters via dropdowns or hotkeys, even without tokens on the scene. This module is **System-Agnostic** and designed for **Foundry VTT v13**.
 
-## Installation
-1. Copy the manifest URL: (https://github.com/rlavkvmflzk/character-chat-selector/releases/latest/download/module.json)
-2. Open Foundry VTT
-3. Navigate to Add-on Modules
-4. Click "Install Module"
-5. Paste the manifest URL and click Install
+### **KEY FEATURES**
+
+🎭 **Tokenless Chat & Easy Selection**
+*   **Speak Without Tokens:** Select and speak as any owned actor instantly.
+*   **Smart Selector:** Dropdown menu with thumbnails and hover previews.
+*   **Quick Commands:** Use `/c [name]` for quick switching with autocomplete, or `/as [Name]` for temporary NPCs.
+*   **Hotkeys:** Bind actors to keys (e.g., `Ctrl + 1`) for lightning-fast switching.
+
+🎨 **Visual Customization**
+*   **Chat Portraits:** Display the speaker's portrait next to every message.
+*   **Stylish Borders:** Choose from **Square, Circle, Minimalist,** and **Cyberpunk** styles.
+*   **Animated Effects:** Add a rotating **Energy Glow** effect for a premium look.
+*   **Color Customization:** Fully customizable colors, including player color integration.
+
+🛠️ **Chat Enhancements & Utilities**
+*   **Rich Text Support:** Full **Markdown** support (bold, italic, quotes) in chat.
+*   **Ruby Text (Furigana):** Add reading guides using the `[Text|Reading]` format.
+*   **Dynamic HP Tint:** Portraits automatically tint red as HP decreases.
+*   **Sheet Access:** Click any portrait to instantly open the character sheet.
+*   **Message Editing:** Right-click sent messages to fix typos.
+
+---
+
+### **LINKS & INSTALLATION**
+*   **Manifest URL:** `https://github.com/rlavkvmflzk/character-chat-selector/releases/latest/download/module.json`
+*   **GitHub Repository:** https://github.com/rlavkvmflzk/character-chat-selector
+
+**Compatibility:** Foundry VTT v13 (System-Agnostic)
