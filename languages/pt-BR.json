@@ -2,7 +2,14 @@
     "CHATSELECTOR": {
         "Default": "Padrão",
         "RefreshList": "Atualizar Lista",
+        "Edit": "Editar",
+        "Save": "Salvar",
+        "Cancel": "Cancelar",
         "Settings": {
+            "AllowPersonalThemes": {
+                "Name": "Permitir Temas Pessoais",
+                "Hint": "Se ativado, a personalização do retrato do jogador (bordas, brilho, etc.) ficará visível para todos. Se desativado, suas configurações locais serão aplicadas a todas as mensagens."
+            },
             "ShowSelector": {
                 "Name": "Mostrar Seletor de Chat",
                 "Hint": "Exibe um seletor que permite conversar como um personagem sem selecionar um token."
@@ -152,4 +159,5 @@
             "TempCharacterDisabled": "O modo de personagem temporário foi desativado."
         }
     }
+
 }
