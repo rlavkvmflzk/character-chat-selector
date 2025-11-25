@@ -1,17 +1,17 @@
+import { ChatAutocomplete } from './chatAutocomplete.js';
+
 class ChatEditorApp extends Application {
     constructor(message, options = {}) {
         super(options);
         this.message = message;
         this.selectedActorId = message.speaker.actor || "";
-        // [최적화] 전체 액터 데이터를 메모리에만 들고 있고, DOM에는 뿌리지 않음
-        this.allActors = [];
+        this.allActors = []; 
     }
 
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             id: "chat-editor-app",
             title: "Edit Message",
-            // template: ... (사용 안 함, _renderInner 오버라이드)
             width: 720,
             height: 500,
             resizable: true,
@@ -21,34 +21,25 @@ class ChatEditorApp extends Application {
     }
 
     getData() {
-        // [최적화] 데이터를 여기서 미리 가공하여 저장
         if (this.allActors.length === 0) {
-            this.allActors = game.actors
-                .filter(a => game.user.isGM || a.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)
-                .map(a => ({
-                    id: a.id,
-                    name: a.name,
-                    img: a.img,
-                    nameLower: a.name.toLowerCase() // 검색용
-                }))
-                .sort((a, b) => a.name.localeCompare(b.name));
-
-            // 기본값(Default) 맨 앞에 추가
+            const cachedActors = ChatAutocomplete.actors;
+            
             const defaultImg = game.user.avatar || "icons/svg/mystery-man.svg";
             const defaultName = game.i18n.localize("CHATSELECTOR.Default");
-
-            this.allActors.unshift({
+            
+            const defaultOption = {
                 id: "",
                 name: defaultName,
                 img: defaultImg,
                 nameLower: defaultName.toLowerCase()
-            });
+            };
+
+            this.allActors = [defaultOption, ...cachedActors];
         }
 
         const currentActor = this.allActors.find(a => a.id === this.selectedActorId);
 
         return {
-            // actors는 렌더링 시점에 동적으로 자르므로 여기서는 안 넘겨도 됨
             message: this.message,
             content: this.message.content,
             currentActorId: this.selectedActorId,
@@ -58,7 +49,6 @@ class ChatEditorApp extends Application {
     }
 
     async _renderInner(data) {
-        // 기본 UI 구조 (리스트 내용은 비워둠)
         const htmlContent = `
         <style>
             .chat-editor-window.app { background: #1e1e1e !important; border: 1px solid #333 !important; box-shadow: 0 0 20px rgba(0,0,0,0.8) !important; color: #f0f0f0 !important; }
@@ -144,13 +134,13 @@ class ChatEditorApp extends Application {
         const renderActorList = (query = "") => {
             const q = query.toLowerCase();
 
-            // 1. 필터링
+            // 1. 필터링 (가벼운 객체 순회)
             let matches = this.allActors;
             if (q) {
                 matches = this.allActors.filter(a => a.nameLower.includes(q));
             }
 
-            // 2. 상위 50개만 자르기 (Lazy Rendering 핵심)
+            // 2. 상위 50개만 자르기
             const LIMIT = 50;
             const sliced = matches.slice(0, LIMIT);
 
@@ -166,7 +156,6 @@ class ChatEditorApp extends Application {
                 `;
             });
 
-            // 4. 힌트 메시지 (잘린 경우)
             if (matches.length > LIMIT) {
                 listHtml += `<div style="padding:10px; text-align:center; color:#666; font-style:italic;">...and ${matches.length - LIMIT} more</div>`;
             }
@@ -180,32 +169,27 @@ class ChatEditorApp extends Application {
         // 초기 렌더링
         renderActorList();
 
-        // 1. 검색 이벤트 (디바운스 적용 권장되나 간단히 구현)
         let searchTimer;
         searchInput.on('input', (e) => {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(() => {
                 renderActorList(e.target.value);
-            }, 150);
+            }, 100);
         });
 
-        // 2. 액터 선택 (이벤트 위임 - 중요)
         actorList.on('click', '.actor-item', (e) => {
             const item = $(e.currentTarget);
             this.selectedActorId = item.data('value');
             const img = item.data('img');
             const name = item.data('name');
 
-            // UI 업데이트
             headerPortrait.attr('src', img);
             headerName.text(name);
 
-            // 클래스 토글
             actorList.find('.actor-item').removeClass('selected');
             item.addClass('selected');
         });
 
-        // 3. 저장 버튼
         html.find('#btnSave').on('click', async () => {
             const newContent = textarea.val();
             const newActorId = this.selectedActorId;

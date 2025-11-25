@@ -1,7 +1,15 @@
 import { ChatSelector } from './chatSelector.js';
 
 export class ChatAutocomplete {
-    static _cachedActors = []; // 캐시 저장소
+    static _cachedActors = []; // 중앙 캐시 저장소
+
+    // 외부에서 캐시된 가벼운 데이터에 접근할 수 있게 getter 제공
+    static get actors() {
+        if (!this._cachedActors || this._cachedActors.length === 0) {
+            this._updateCache();
+        }
+        return this._cachedActors;
+    }
 
     static initialize() {
         // 초기 캐싱
@@ -9,9 +17,11 @@ export class ChatAutocomplete {
 
         // 데이터 변경 시 캐시 갱신 (디바운스 적용으로 과부하 방지)
         const debouncedUpdate = foundry.utils.debounce(() => this._updateCache(), 200);
+        
         Hooks.on('createActor', debouncedUpdate);
         Hooks.on('deleteActor', debouncedUpdate);
         Hooks.on('updateActor', (actor, changes) => {
+            // 이름, 이미지, 소유권이 변경될 때만 캐시 갱신
             if (changes.name || changes.img || changes.ownership) debouncedUpdate();
         });
 
@@ -21,10 +31,11 @@ export class ChatAutocomplete {
         });
     }
 
-    // [최적화] 가벼운 데이터로 미리 변환하여 캐싱
+    // [최적화] 무거운 Actor 객체 대신 {id, name, img}만 있는 가벼운 객체(POJO)로 변환하여 저장
     static _updateCache() {
         if (!game.user) return;
         
+        // game.actors를 순회하는 것은 여기서 딱 한 번만 수행
         this._cachedActors = game.actors
             .filter(actor => {
                 if (game.user.isGM) return true;
@@ -37,6 +48,8 @@ export class ChatAutocomplete {
                 nameLower: a.name.toLowerCase() // 검색 속도 향상을 위해 미리 소문자 변환
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
+            
+        console.log(`Character Chat Selector | Cached ${this._cachedActors.length} actors for autocomplete.`);
     }
 
     static _setupAutocomplete(html) {
@@ -87,7 +100,7 @@ export class ChatAutocomplete {
                 } else {
                     this._closeList(listContainer);
                 }
-            }, 150);
+            }, 100); // 반응 속도를 위해 딜레이 약간 단축
         };
 
         chatInput.removeEventListener('input', inputHandler);
@@ -129,15 +142,14 @@ export class ChatAutocomplete {
     }
 
     static _searchAndRender(query, listContainer, chatInput) {
-        // [최적화] 캐시된 데이터 사용
+        // [최적화] 이미 가볍게 변환된 this._cachedActors 사용
         let matches = [];
         
         if (!query || !query.trim()) {
-            // 쿼리가 없으면 전체 목록 (너무 많으면 잘릴 것임)
             matches = this._cachedActors;
         } else {
             const q = query.toLowerCase();
-            // 미리 계산된 nameLower 사용
+            // 문자열 포함 여부만 빠르게 검사 (Levenshtein 등 무거운 연산 제외)
             matches = this._cachedActors.filter(a => a.nameLower.includes(q));
         }
 
@@ -153,10 +165,9 @@ export class ChatAutocomplete {
     }
 
     static _renderList(matches, container, chatInput) {
-        // [최적화] DocumentFragment 사용으로 리플로우 최소화
         const fragment = document.createDocumentFragment();
 
-        // 최대 표시 개수 제한 (DOM 폭발 방지)
+        // DOM 과부하 방지를 위해 최대 표시 개수 제한
         const MAX_RESULTS = 20;
         const displayMatches = matches.slice(0, MAX_RESULTS);
 
@@ -164,7 +175,7 @@ export class ChatAutocomplete {
             const div = document.createElement('div');
             div.className = `autocomplete-item ${index === 0 ? 'active' : ''}`;
             div.dataset.index = index;
-            // innerHTML은 비용이 비싸지만 이 정도 소량은 괜찮음
+            
             div.innerHTML = `
             <img src="${actor.img}" width="24" height="24" style="border:none; vertical-align:middle;"/>
             <span>${actor.name}</span>
@@ -202,7 +213,7 @@ export class ChatAutocomplete {
     }
 
     static _moveSelection(direction, container) {
-        const max = Math.min(this.state.matches.length, 20); // 보이는 것 내에서만 이동
+        const max = Math.min(this.state.matches.length, 20); 
         if (max === 0) return;
 
         let newIndex = this.state.selectedIndex + direction;
@@ -214,7 +225,7 @@ export class ChatAutocomplete {
 
         const items = container.querySelectorAll('.autocomplete-item');
         items.forEach(item => item.classList.remove('active'));
-        // 마지막 '...more' 항목은 선택 불가하므로 items[newIndex]가 존재할 때만
+        
         if (items[newIndex] && !items[newIndex].textContent.startsWith('...and')) {
             items[newIndex].classList.add('active');
             items[newIndex].scrollIntoView({ block: 'nearest' });

@@ -4,12 +4,12 @@
         "RefreshList": "Refresh List",
         "Edit": "Edit",
         "Save": "Save",
-        "Cancel": "Cancel",        
+        "Cancel": "Cancel",
         "Settings": {
             "AllowPersonalThemes": {
                 "Name": "Allow Personal Themes",
                 "Hint": "If enabled, player's custom portrait styles (borders, glow, etc.) will be visible to everyone. If disabled, your local settings will apply to all messages."
-            },            
+            },
             "ShowSelector": {
                 "Name": "Show Chat Selector",
                 "Hint": "Displays a selector that allows chatting as a character without selecting a token."
@@ -88,8 +88,8 @@
                 "Hint": "Enter the actor data path where maximum HP is stored"
             },
             "HidePortrait": {
-            "Name": "Hide D&D5e Portrait",
-            "Hint": "Hides the default D&D5e chat portrait when enabled. This helps avoid duplicate portraits when using the Chat Selector module."
+                "Name": "Hide D&D5e Portrait",
+                "Hint": "Hides the default D&D5e chat portrait when enabled. This helps avoid duplicate portraits when using the Chat Selector module."
             },
             "AllowedModuleFlags": {
                 "Name": "Allowed Module Flags",
@@ -139,13 +139,31 @@
                 "Name": "Ruby Text Color",
                 "Hint": "Set the color of ruby text"
             },
-            "ReloadRequired": "Please refresh your browser for the changes to take effect."
+            "ReloadRequired": "Please refresh your browser for the changes to take effect.",
+            "FactoryReset": {
+                "Name": "Factory Reset",
+                "Hint": "Resets all settings, hotkeys, and personal themes to default. Use this if you encounter issues. (Refreshes automatically)",
+                "ConfirmTitle": "Confirm Factory Reset",
+                "ConfirmContent": "<p>Are you sure?</p><p><strong>All personal settings and hotkeys will be deleted.</strong></p>"
+            },
+            "EnableOptimization": {
+                "Name": "Chat Performance Optimization (Infinite Scroll)",
+                "Hint": "Limits the number of messages in the chat log and loads previous messages when scrolling up. Similar functionality to the 'Less Chat' module."
+            },
+            "MaxMessages": {
+                "Name": "Max Displayed Messages",
+                "Hint": "The maximum number of messages to keep in the chat window. If exceeded, the oldest messages are removed from the view."
+            },
+            "BatchSize": {
+                "Name": "Scroll Loading Batch Size",
+                "Hint": "The number of past messages to load at once when scrolling up."
+            }
         },
         "ConfigureHotkeys": "Configure Hotkeys",
         "HotkeyConfig": {
-        "Title": "Actor Switch Hotkey Configuration",
-        "Instructions": "Click each actor's input field and press the desired key to set a hotkey.",
-        "ModifierNote": "The assigned hotkey will be used with the {modifier} key."
+            "Title": "Actor Switch Hotkey Configuration",
+            "Instructions": "Click each actor's input field and press the desired key to set a hotkey.",
+            "ModifierNote": "The assigned hotkey will be used with the {modifier} key."
         },
         "Warnings": {
             "NoName": "Please enter a Actor name.",

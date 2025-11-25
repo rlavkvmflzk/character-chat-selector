@@ -2,6 +2,8 @@ import { ChatSelector } from './chatSelector.js';
 import { HotkeyManager } from './hotkeyManager.js';
 import { ChatEditor } from './chatEditor.js'; 
 import { ChatAutocomplete } from './chatAutocomplete.js';
+import { ChatOptimizer } from './chatOptimizer.js'; // [추가됨]
+
 
 Hooks.once('init', () => {
     console.log('Character Chat Selector: Initializing...');
@@ -9,6 +11,7 @@ Hooks.once('init', () => {
     HotkeyManager.initialize();
     ChatEditor.initialize(); 
     ChatAutocomplete.initialize();
+    ChatOptimizer.initialize(); // [추가됨]    
 });
 
 // 채팅 메시지 생성 전에 추가 처리

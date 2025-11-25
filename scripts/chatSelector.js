@@ -2,6 +2,7 @@ import { HpTintEffect } from './hpTintEffect.js';
 import { Dnd5ePortraitHandler } from './dnd5ePortraitHandler.js';
 import { HotkeyManager } from './hotkeyManager.js';
 import { RubyTextHandler } from './rubyTextHandler.js';
+import { ChatAutocomplete } from './chatAutocomplete.js';
 
 export class ChatSelector {
     static SETTINGS = {
@@ -21,6 +22,7 @@ export class ChatSelector {
         CHAT_BORDER_COLOR: 'chatBorderColor',
         HIDE_DND5E_PORTRAIT: 'hideDnd5ePortrait',
         ALLOWED_MODULE_FLAGS: 'allowedModuleFlags',
+        FACTORY_RESET: 'factoryReset'
     };
 
     static initialize() {
@@ -43,7 +45,7 @@ export class ChatSelector {
         });
 
         Hooks.once('ready', () => {
-             this._onCharacterSelect({ target: { value: '' } });
+            this._onCharacterSelect({ target: { value: '' } });
         });
 
         Hooks.on("chatMessage", (chatLog, messageText, chatData) => {
@@ -58,10 +60,7 @@ export class ChatSelector {
                     return false;
                 }
 
-                const availableActors = game.actors.filter(actor => {
-                    if (game.user.isGM) return true;
-                    return actor.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-                });
+                const availableActors = ChatAutocomplete.actors;
 
                 const bestMatch = this._findBestMatch(searchTerm, availableActors);
 
@@ -109,13 +108,13 @@ export class ChatSelector {
 
         this.tempCharacter = null;
     }
-    
+
     static registerSettings() {
 
         game.settings.register('character-chat-selector', 'allowPersonalThemes', {
             name: game.i18n.localize('CHATSELECTOR.Settings.AllowPersonalThemes.Name'),
             hint: game.i18n.localize('CHATSELECTOR.Settings.AllowPersonalThemes.Hint'),
-            scope: 'world', 
+            scope: 'world',
             config: true,
             type: Boolean,
             default: true
@@ -169,7 +168,7 @@ export class ChatSelector {
             type: Number,
             default: 36,
             range: { min: 20, max: 100, step: 4 },
-            onChange: syncFlags 
+            onChange: syncFlags
         });
 
         game.settings.register('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER, {
@@ -346,8 +345,19 @@ export class ChatSelector {
             onChange: () => this._updateDropdownStyles()
         });
 
-       Hooks.on('renderSettingsConfig', (app, html, data) => {
+        game.settings.register('character-chat-selector', this.SETTINGS.FACTORY_RESET, {
+            name: game.i18n.localize('CHATSELECTOR.Settings.FactoryReset.Name'),
+            hint: game.i18n.localize('CHATSELECTOR.Settings.FactoryReset.Hint'),
+            scope: 'client',
+            config: true,
+            type: Boolean,
+            default: false,
+            onChange: () => { }
+        });
+
+        Hooks.on('renderSettingsConfig', (app, html, data) => {
             this._injectColorPickers(html);
+            this._injectResetButton(html); // [추가 2] 버튼 주입 함수 호출            
         });
 
         Hooks.once('ready', () => {
@@ -379,7 +389,7 @@ export class ChatSelector {
                 activeTab = activeTabIcon.dataset.tab;
             }
         }
-        if (!activeTab) activeTab = 'chat'; 
+        if (!activeTab) activeTab = 'chat';
 
         const isChatTab = activeTab === 'chat';
 
@@ -402,7 +412,7 @@ export class ChatSelector {
 
     static async _syncUserFlags() {
         if (!game.user) return;
-        
+
         const themeData = {
             portraitSize: game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_SIZE),
             borderStyle: game.settings.get('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER),
@@ -416,9 +426,9 @@ export class ChatSelector {
         };
 
         await game.user.setFlag('character-chat-selector', 'userTheme', themeData);
-    }    
+    }
 
-        static _injectColorPickers(html) {
+    static _injectColorPickers(html) {
         const colorSettings = [
             this.SETTINGS.PORTRAIT_BORDER_COLOR,
             this.SETTINGS.SECONDARY_COLOR,
@@ -431,11 +441,11 @@ export class ChatSelector {
         ];
 
         const root = (html instanceof HTMLElement) ? html : html[0];
-        
+
         colorSettings.forEach(settingKey => {
             const inputName = `character-chat-selector.${settingKey}`;
             const input = root.querySelector(`input[name="${inputName}"]`);
-            
+
             if (input) {
                 if (input.nextElementSibling?.type === 'color') return;
 
@@ -450,12 +460,12 @@ export class ChatSelector {
 
                 const currentVal = input.value;
                 if (currentVal && currentVal.startsWith('#')) {
-                    picker.value = currentVal.substring(0, 7); 
+                    picker.value = currentVal.substring(0, 7);
                 }
 
                 picker.addEventListener('input', (e) => {
                     const hex = e.target.value;
-                    const currentAlpha = input.value.length > 7 ? input.value.substring(7) : ''; 
+                    const currentAlpha = input.value.length > 7 ? input.value.substring(7) : '';
                     input.value = hex + currentAlpha;
                 });
 
@@ -471,6 +481,74 @@ export class ChatSelector {
         });
     }
 
+    static _injectResetButton(html) {
+        const root = (html instanceof HTMLElement) ? html : html[0];
+        const inputName = `character-chat-selector.${this.SETTINGS.FACTORY_RESET}`;
+        const checkbox = root.querySelector(`input[name="${inputName}"]`);
+
+        if (checkbox) {
+            const formGroup = checkbox.closest('.form-group');
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.innerHTML = `<i class="fas fa-undo"></i> ${game.i18n.localize("CHATSELECTOR.Settings.FactoryReset.Name")}`;
+            button.style.width = 'auto';
+            button.style.minWidth = '200px';
+            button.style.marginLeft = 'auto';
+
+            button.onclick = () => this._doFactoryReset();
+
+            const controlDiv = formGroup.querySelector('.form-fields');
+            controlDiv.innerHTML = '';
+            controlDiv.appendChild(button);
+        }
+    }
+
+    static async _doFactoryReset() {
+        const MODULE_ID = 'character-chat-selector';
+
+        const confirmed = await Dialog.confirm({
+            title: game.i18n.localize("CHATSELECTOR.Settings.FactoryReset.ConfirmTitle"),
+            content: game.i18n.localize("CHATSELECTOR.Settings.FactoryReset.ConfirmContent"),
+            defaultYes: false
+        });
+
+        if (!confirmed) return;
+
+        ui.notifications.info("Processing Factory Reset...");
+
+        // 1. Settings 초기화
+        const allSettings = Array.from(game.settings.settings.keys());
+        for (const key of allSettings) {
+            if (key.startsWith(`${MODULE_ID}.`)) {
+                const settingName = key.split('.')[1];
+                const settingDef = game.settings.settings.get(key);
+
+                if (settingName === this.SETTINGS.FACTORY_RESET) continue;
+
+                try {
+                    if (settingDef.scope === 'world' && !game.user.isGM) continue;
+                    await game.settings.set(MODULE_ID, settingName, settingDef.default);
+                } catch (err) {
+                    console.warn(`[ChatSelector] Failed to reset ${settingName}:`, err);
+                }
+            }
+        }
+
+        // 2. Flags 초기화
+        try {
+            await game.user.unsetFlag(MODULE_ID, "hotkeyBindings");
+            await game.user.unsetFlag(MODULE_ID, "userTheme");
+        } catch (err) {
+            console.warn("[ChatSelector] Failed to clear flags:", err);
+        }
+
+        ui.notifications.info("Reset complete. Reloading...");
+
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
+    }
+
     static _createSelector(initialActorId = null) {
         const chatControls = document.querySelector("#chat-controls");
         if (!chatControls) {
@@ -482,12 +560,7 @@ export class ChatSelector {
             return;
         }
 
-        const actors = game.actors
-            .filter(actor => {
-                if (game.user.isGM) return true;
-                return actor.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-            })
-            .sort((a, b) => a.name.localeCompare(b.name));
+        const actors = ChatAutocomplete.actors;
 
         const selectedActor = initialActorId ? actors.find(a => a.id === initialActorId) : null;
         const selectedName = selectedActor ? selectedActor.name : game.i18n.localize("CHATSELECTOR.Default");
@@ -534,12 +607,7 @@ export class ChatSelector {
     }
 
     static _getCharacterOptions(currentActorId) {
-        const actors = game.actors
-            .filter(actor => {
-                if (game.user.isGM) return true;
-                return actor.ownership[game.user.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-            })
-            .sort((a, b) => a.name.localeCompare(b.name));
+        const actors = ChatAutocomplete.actors;
 
         return actors
             .map(a => `
@@ -583,7 +651,7 @@ export class ChatSelector {
                         let top = itemRect.top + (itemRect.height - 150) / 2;
 
                         if (top + 150 > viewportHeight) {
-                            top = viewportHeight - 160; 
+                            top = viewportHeight - 160;
                         }
 
                         if (top < 10) {
@@ -592,7 +660,7 @@ export class ChatSelector {
 
                         let left = itemRect.right + 10;
                         if (left + 150 > viewportWidth) {
-                            left = itemRect.left - 160; 
+                            left = itemRect.left - 160;
                         }
 
                         preview.style.top = `${top}px`;
@@ -659,12 +727,11 @@ export class ChatSelector {
 
                 if (parts.length > 1) {
                     const messageContent = parts.slice(1).join(' ');
-                    // [수정] 명령어 처리에서도 루비 문자 변환
                     const processedMessage = RubyTextHandler.processMessage(messageContent);
 
                     ChatSelector.tempCharacter = {
                         name: tempName,
-                        img: 'icons/svg/mystery-man.svg' 
+                        img: 'icons/svg/mystery-man.svg'
                     };
 
                     return ChatMessage.create({
@@ -714,7 +781,7 @@ export class ChatSelector {
                             alias: ChatSelector.tempCharacter.name
                         },
                         content: `${ChatSelector.tempCharacter.name} ${processedEmoteText}`,
-                        style: CHAT_STYLES.EMOTE 
+                        style: CHAT_STYLES.EMOTE
                     });
                 }
             }
@@ -725,7 +792,7 @@ export class ChatSelector {
 
                 if (message.startsWith('/')) {
                     // [중요] 명령어지만 커스텀 처리가 필요한 것들 먼저 캐치
-                    
+
                     // OOC
                     if (message.startsWith('/ooc ')) {
                         const oocText = message.slice(5);
@@ -780,7 +847,7 @@ export class ChatSelector {
                             style: CHAT_STYLES.EMOTE
                         });
                     }
-                    
+
                     return originalProcessMessage.call(this, message);
                 }
 
@@ -789,7 +856,7 @@ export class ChatSelector {
                     user: game.user.id,
                     speaker: speaker,
                     content: processedMessage,
-                    style: CHAT_STYLES.IC 
+                    style: CHAT_STYLES.IC
                 });
             }
 
@@ -822,16 +889,16 @@ export class ChatSelector {
             }
 
             if (message.startsWith('/w ') || message.startsWith('/whisper ')) {
-                 // 정규식으로 타겟과 메시지 분리 (더 안전함)
+                // 정규식으로 타겟과 메시지 분리 (더 안전함)
                 const match = message.match(/^\/(?:w|whisper)\s+(?:["'\[](.*?)["'\]]|(\S+))\s+(.*)/);
-                
+
                 if (match) {
                     const targetName = match[1] || match[2];
                     const whisperText = match[3];
                     const targets = game.users.filter(u => u.name === targetName);
-                    
+
                     if (targets.length === 0) {
-                        return originalProcessMessage.call(this, message); 
+                        return originalProcessMessage.call(this, message);
                     }
 
                     return ChatMessage.create({
@@ -842,7 +909,7 @@ export class ChatSelector {
                         style: CHAT_STYLES.WHISPER
                     });
                 } else {
-                     return originalProcessMessage.call(this, message);
+                    return originalProcessMessage.call(this, message);
                 }
             }
 
@@ -865,83 +932,8 @@ export class ChatSelector {
                     user: game.user.id,
                     speaker: speaker,
                     content: `${speaker.alias} ${processedEmoteText}`,
-                    style: CHAT_STYLES.EMOTE 
+                    style: CHAT_STYLES.EMOTE
                 });
-            }
-
-            if (message.startsWith('/r') || message.startsWith('/roll') ||
-                message.startsWith('/gmroll ') || message.startsWith('/gr ') ||
-                message.startsWith('/blindroll ') || message.startsWith('/br ') ||
-                message.startsWith('/selfroll ') || message.startsWith('/sr ')) {
-                try {
-                    let rollMode = "roll";
-                    let whisperIds = [];
-                    let rollData = "";
-
-                    if (message.startsWith('/gmroll ') || message.startsWith('/gr ')) {
-                        rollMode = "gmroll";
-                        whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
-                        rollData = message.startsWith('/gr ') ? message.slice(4) : message.slice(8);
-                    } else if (message.startsWith('/blindroll ') || message.startsWith('/br ')) {
-                        rollMode = "blindroll";
-                        whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
-                        rollData = message.startsWith('/br ') ? message.slice(4) : message.slice(10);
-                    } else if (message.startsWith('/selfroll ') || message.startsWith('/sr ')) {
-                        rollMode = "selfroll";
-                        whisperIds = [game.user.id];
-                        rollData = message.startsWith('/sr ') ? message.slice(4) : message.slice(10);
-                    } else {
-                        rollMode = game.settings.get("core", "rollMode");
-                        rollData = message.startsWith('/r ') ? message.slice(3) : message.slice(6);
-                        switch (rollMode) {
-                            case "gmroll":
-                            case "blindroll":
-                                whisperIds = game.users.filter(u => u.isGM).map(u => u.id);
-                                break;
-                            case "selfroll":
-                                whisperIds = [game.user.id];
-                                break;
-                        }
-                    }
-
-                    ui.chat.element.find('#chat-message').val('');
-
-                    (async () => {
-                        const roll = new Roll(rollData.trim());
-                        await roll.evaluate({ async: true });
-
-                        if (game.dice3d) {
-                            await game.dice3d.showForRoll(roll);
-                        }
-
-                        const chatData = {
-                            user: game.user.id,
-                            speaker: speaker,
-                            roll: roll,
-                            rollMode: rollMode,
-                            content: await roll.render(),
-                            sound: CONFIG.sounds.dice,
-                            flags: {
-                                core: {
-                                    initiator: game.user.id,
-                                    canPopout: true
-                                }
-                            }
-                        };
-
-                        if (whisperIds.length > 0) {
-                            chatData.whisper = whisperIds;
-                        }
-
-                        await ChatMessage.create(chatData);
-                    })();
-
-                    return true;
-                } catch (err) {
-                    console.error("Roll error:", err);
-                    ui.notifications.error("Invalid roll formula");
-                    return null;
-                }
             }
 
             if (message.startsWith('/')) {
@@ -954,7 +946,7 @@ export class ChatSelector {
                 user: game.user.id,
                 speaker: speaker,
                 content: processedMessage,
-                style: CHAT_STYLES.IC 
+                style: CHAT_STYLES.IC
             });
         };
     }
@@ -1051,92 +1043,171 @@ export class ChatSelector {
         return tokenImg;
     }
 
-    static async _addPortraitToMessage(message, html, data) {
+    static _getTokenImage(speaker) {
+        let tokenImg = null;
+
+        if (speaker.token) {
+            const activeToken = canvas.tokens?.placeables.find(t => t.id === speaker.token);
+            if (activeToken) {
+                tokenImg = activeToken.document.texture.src || activeToken.document.img;
+            }
+
+            if (!tokenImg) {
+                const scene = game.scenes.get(speaker.scene || canvas.scene?.id);
+                if (scene) {
+                    const tokenDoc = scene.tokens.get(speaker.token);
+                    if (tokenDoc) {
+                        tokenImg = tokenDoc.texture?.src || tokenDoc.img;
+                    }
+                }
+            }
+        }
+
+        if (!tokenImg && speaker.actor) {
+            const actor = game.actors.get(speaker.actor);
+            if (actor) {
+                const prototypeToken = actor.prototypeToken;
+                if (prototypeToken) {
+                    tokenImg = prototypeToken.texture?.src || prototypeToken.img || actor.img;
+                }
+            }
+        }
+
+        return tokenImg;
+    }
+
+    // [수정 2] async 제거 - 위 함수가 동기식이므로 여기도 동기식이어야 함
+    static _getMessageImage(message) {
+        if (ChatSelector.tempCharacter && message.speaker?.alias === ChatSelector.tempCharacter.name) {
+            return ChatSelector.tempCharacter.img;
+        }
+
+        if (!message.speaker?.actor) {
+            const user = message.author || message.user;
+            if (user?.avatar) {
+                return user.avatar;
+            }
+        }
+
+        const speakAsToken = game.settings.get('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN);
+
+        if (speakAsToken) {
+            // await 제거 (동기 호출)
+            const tokenImg = this._getTokenImage(message.speaker);
+            if (tokenImg) return tokenImg;
+        }
+
+        const actor = game.actors.get(message.speaker.actor);
+        if (actor?.img) {
+            return actor.img;
+        }
+
+        const fallbackAvatar = game.users.get(message.author || message.user)?.avatar || 'icons/svg/mystery-man.svg';
+        return fallbackAvatar;
+    }
+
+    // [수정 3] async 제거 + MutationObserver 적용 (깜빡임 해결 + 안전장치)
+static _addPortraitToMessage(message, html, data) {
         if (!game.settings.get('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT)) return;
 
         const CHAT_STYLES = CONST.CHAT_MESSAGE_STYLES;
         const messageStyle = message.style;
 
-        const isOurMessage = 
+        const isOurMessage =
             (messageStyle === CHAT_STYLES.IC) ||
             (messageStyle === CHAT_STYLES.EMOTE) ||
             (messageStyle === CHAT_STYLES.OOC) ||
-            (message.whisper.length > 0) || 
-            (message.isRoll && !message.flags?.["core"]?.external); 
+            (messageStyle === CHAT_STYLES.OTHER) ||
+            (message.whisper.length > 0) ||
+            (message.isRoll && !message.flags?.["core"]?.external);
 
         if (!isOurMessage || !message.speaker) return;
 
-        if (game.system.id === 'dnd5e') {
-            setTimeout(async () => {
-                const chatElement = ui.chat.element;
-                const chatLog = (chatElement instanceof HTMLElement) ? chatElement : (chatElement && chatElement[0]);
+        const imgSrc = this._getMessageImage(message);
+        if (!imgSrc) return;
 
-                if (!chatLog) return;
+        const messageElement = (html instanceof HTMLElement) ? html : (html[0] || html);
+        const header = messageElement.querySelector('.message-header');
+        if (!header) return;
 
-                const wasAtBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 50;
-                const isMyMessage = message.isAuthor;
+        // [스크롤 조건 체크]
+        const chatLog = document.getElementById('chat-log');
+        const wasAtBottom = chatLog ? (chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 50) : false;
+        const isMyMessage = message.isAuthor;
 
-                try {
-                    const imgSrc = await this._getMessageImage(message);
-                    if (!imgSrc) return;
-
-                    const header = html.querySelector('.message-header');
-                    if (!header) return;
-
-                    const portraitContainer = this._createPortraitElement(message, imgSrc);
-
-                    const existingAvatar = header.querySelector('a.avatar');
-                    const senderEl = header.querySelector('.message-sender');
-
-                    if (existingAvatar) {
-                        existingAvatar.replaceWith(portraitContainer);
-                    } else if (senderEl) {
-                        senderEl.prepend(portraitContainer);
-                    } else {
-                        header.prepend(portraitContainer);
-                    }
-
-                    this._applyCommonStyles(html, message, portraitContainer);
-                } catch (error) {
-                    console.error(`[Character-Chat-Selector] D&D5e Portrait Error:`, error);
-                } finally {
-                    if (wasAtBottom || isMyMessage) {
-                        ui.chat.scrollBottom();
-                    }
-                }
-            }, 0);
-
-        } else {
-            try {
-                const imgSrc = await this._getMessageImage(message);
-                if (!imgSrc) return;
-
-                const header = html.querySelector('.message-header');
-                if (!header) return;
-
-                const portraitContainer = this._createPortraitElement(message, imgSrc);
-                const senderEl = header.querySelector('.message-sender');
-
-                if (senderEl) {
-                    senderEl.prepend(portraitContainer);
-                } else {
-                    header.prepend(portraitContainer);
-                }
-
-                this._applyCommonStyles(html, message, portraitContainer);
-            } catch (error) {
-                console.error(`[Character-Chat-Selector] Core Portrait Error:`, error);
+        // [강력한 스크롤 고정 함수]
+        const enforceBottom = () => {
+            if ((wasAtBottom || isMyMessage) && chatLog) {
+                chatLog.scrollTop = chatLog.scrollHeight;
             }
-        }
-    }
+        };
 
+        // 포트레잇 컨테이너 생성
+        const portraitContainer = this._createPortraitElement(message, imgSrc);
+
+        // [핵심 해결책] 이미지가 완전히 로딩되어 높이가 잡혔을 때 스크롤 내리기
+        const img = portraitContainer.querySelector('img');
+        if (img) {
+            img.onload = () => {
+                enforceBottom();
+                // 브라우저 렌더링 타이밍 오차 보정 (더블 탭)
+                requestAnimationFrame(enforceBottom);
+            };
+        }
+
+        // 삽입 및 교체 로직 (함수로 분리하여 중복 제거)
+        const injectPortrait = () => {
+            // 중복 방지
+            if (header.querySelector('.chat-portrait-container')) return;
+
+            const existingAvatar = header.querySelector('a.avatar');
+            const senderEl = header.querySelector('.message-sender');
+
+            if (existingAvatar) {
+                existingAvatar.replaceWith(portraitContainer);
+            } else if (senderEl) {
+                senderEl.prepend(portraitContainer);
+            } else {
+                header.prepend(portraitContainer);
+            }
+
+            this._applyCommonStyles(messageElement, message, portraitContainer);
+            
+            // DOM 삽입 직후 1차 스크롤
+            enforceBottom();
+        };
+
+        // 1. 즉시 실행
+        injectPortrait();
+
+        // 2. MutationObserver (시스템이 나중에 건드리는 것 감지)
+        const observer = new MutationObserver((mutations, obs) => {
+            const avatar = header.querySelector('a.avatar');
+            // 내 포트레잇이 아니고 시스템 아바타라면 교체
+            if (avatar && !avatar.classList.contains('chat-portrait-container')) {
+                avatar.replaceWith(portraitContainer);
+                this._applyCommonStyles(messageElement, message, portraitContainer);
+                enforceBottom();
+                obs.disconnect();
+            }
+        });
+        observer.observe(header, { childList: true, subtree: true });
+
+        // 3. 안전 장치 (0ms 후 확인)
+        setTimeout(() => {
+            observer.disconnect();
+            injectPortrait(); // 혹시 누락되었으면 삽입
+            enforceBottom();  // 마지막으로 스크롤 확인
+        }, 0);
+    }
+    
     static _createPortraitElement(message, imgSrc) {
         const moduleID = 'character-chat-selector';
-        
+
         const allowPersonal = game.settings.get(moduleID, 'allowPersonalThemes');
-        
+
         const author = message.author || game.users.get(message.user);
-        
+
         let theme = {};
         let sourceIsAuthor = false;
 
@@ -1167,7 +1238,7 @@ export class ChatSelector {
 
         const portraitContainer = document.createElement('div');
         portraitContainer.classList.add('chat-portrait-container', `portrait-${borderStyle}`);
-        
+
         if (useGlow) {
             portraitContainer.classList.add('animated-glow');
         }
@@ -1179,9 +1250,9 @@ export class ChatSelector {
         img.classList.add('chat-portrait');
         portraitContainer.appendChild(img);
 
-        const userColorToUse = (author?.color || '#4b4a44'); 
+        const userColorToUse = (author?.color || '#4b4a44');
         const primaryColor = useUserColor ? userColorToUse : customBorderColor;
-        
+
         portraitContainer.style.setProperty('--primary-color', primaryColor);
         portraitContainer.style.setProperty('--glow-color', glowColor);
 
@@ -1208,10 +1279,11 @@ export class ChatSelector {
                 const token = await this._getToken(speaker);
                 sheet = token?.actor?.sheet;
             }
-            if (!sheet) {
+            if (!sheet && speaker.actor) { // [수정] speaker.actor가 존재할 때만
                 const actor = game.actors.get(speaker.actor);
                 sheet = actor?.sheet;
             }
+            // sheet가 없으면(유저 아바타) 아무 동작 안 함
             sheet?.render(true);
         });
 
@@ -1266,8 +1338,10 @@ export class ChatSelector {
         const searchTermLower = searchTerm.toLowerCase();
         const searchRegex = new RegExp(searchPattern, 'i');
 
+        // [최적화] actors는 이제 {id, name, img, nameLower} 객체들의 배열입니다.
+        // Document getter 접근이 발생하지 않습니다.
         actors.forEach(actor => {
-            const nameLower = actor.name.toLowerCase();
+            const nameLower = actor.nameLower; // 이미 소문자로 저장된 값 사용
             let score = 10;
 
             if (nameLower.startsWith(searchTermLower)) {
@@ -1283,6 +1357,7 @@ export class ChatSelector {
                 score = 3;
             }
             else {
+                // Levenshtein 거리는 무거운 연산이므로, 위 조건이 아닐 때만 계산
                 score = this._getLevenshteinDistance(searchTermLower, nameLower);
                 score = score / Math.max(nameLower.length, searchTermLower.length) * 10;
             }

@@ -88,8 +88,8 @@
                 "Hint": "Insira o caminho de dados do ator onde o PV máximo está armazenado."
             },
             "HidePortrait": {
-            "Name": "Esconder Imagem do D&D5e",
-            "Hint": "Quando ativado, oculta o retrato de chat padrão do D&D5e. Isso ajuda a evitar retratos duplicados ao usar o módulo Character Chat Selector."
+                "Name": "Esconder Imagem do D&D5e",
+                "Hint": "Quando ativado, oculta o retrato de chat padrão do D&D5e. Isso ajuda a evitar retratos duplicados ao usar o módulo Character Chat Selector."
             },
             "AllowedModuleFlags": {
                 "Name": "Permitir Flags de Módulos",
@@ -139,13 +139,31 @@
                 "Name": "Cor do Texto Ruby",
                 "Hint": "Definir a cor do texto Ruby."
             },
-            "ReloadRequired": "Atualize seu navegador para que as alterações entrem em vigor."
+            "ReloadRequired": "Atualize seu navegador para que as alterações entrem em vigor.",
+            "FactoryReset": {
+                "Name": "Restaurar Padrões",
+                "Hint": "Redefine todas as configurações, atalhos e temas pessoais para o padrão. Use isso se encontrar problemas. (Atualiza automaticamente)",
+                "ConfirmTitle": "Confirmar Restauração",
+                "ConfirmContent": "<p>Tem certeza?</p><p><strong>Todas as configurações pessoais e atalhos serão excluídos.</strong></p>"
+            },
+            "EnableOptimization": {
+                "Name": "Otimização de Desempenho do Chat (Rolagem Infinita)",
+                "Hint": "Limita o número de mensagens no registro de chat e carrega mensagens anteriores ao rolar para cima. Funcionalidade semelhante ao módulo 'Less Chat'."
+            },
+            "MaxMessages": {
+                "Name": "Máximo de Mensagens Exibidas",
+                "Hint": "O número máximo de mensagens a serem mantidas na janela de chat. Se excedido, as mensagens mais antigas serão removidas da visualização."
+            },
+            "BatchSize": {
+                "Name": "Tamanho do Lote de Carregamento",
+                "Hint": "O número de mensagens passadas a serem carregadas de uma vez ao rolar para cima."
+            }
         },
         "ConfigureHotkeys": "Configurar Atalhos",
         "HotkeyConfig": {
-        "Title": "Configuração de Atalho para Troca de Ator",
-        "Instructions": "Clique no campo de entrada de cada ator e pressione a tecla desejada para definir uma tecla de atalho.",
-        "ModifierNote": "A tecla de atalho atribuída será usada com a tecla {modifier}."
+            "Title": "Configuração de Atalho para Troca de Ator",
+            "Instructions": "Clique no campo de entrada de cada ator e pressione a tecla desejada para definir uma tecla de atalho.",
+            "ModifierNote": "A tecla de atalho atribuída será usada com a tecla {modifier}."
         },
         "Warnings": {
             "NoName": "Por favor, insira o nome de um Ator.",
@@ -159,5 +177,4 @@
             "TempCharacterDisabled": "O modo de personagem temporário foi desativado."
         }
     }
-
 }
