@@ -58,7 +58,7 @@ export class ChatOptimizer {
         const ChatLog = foundry.applications.sidebar.tabs.ChatLog;
         const self = this;
 
-        // 모든 채팅 로그(사이드바 + v13 접힘 상태)를 찾기 위한 헬퍼
+        // 헬퍼: 모든 채팅 로그 컨테이너 찾기
         const getAllChatLogs = () => document.querySelectorAll('.chat-log');
 
         Object.defineProperty(CONFIG.ChatMessage, 'batchSize', {
@@ -81,12 +81,14 @@ export class ChatOptimizer {
             }
         });
 
-        // Prune
-        ChatLog.prototype.ccsPrune = function () {
+        // Prune (메시지 개수 제한)
+        ChatLog.prototype.ccsPrune = function() {
             const max = game.settings.get(self.ID, self.SETTINGS.MAX_MESSAGES);
             const logs = getAllChatLogs();
 
             logs.forEach(log => {
+                if (log.closest('.overflow')) return;
+
                 if (log.childElementCount > max) {
                     const scroll = log.closest('.chat-scroll') || log.parentElement;
                     if (!scroll) return;
@@ -107,12 +109,12 @@ export class ChatOptimizer {
 
                         toRemove.forEach((li) => {
                             const msg = game.messages.get(li.dataset.messageId);
-                            if (msg) msg._ccsLogged = false;
+                            if (msg) msg._ccsLogged = false; 
                             li.remove();
                         });
 
                         if (log.closest('#sidebar')) {
-                            this._ccsLastId = (() => {
+                             this._ccsLastId = (() => {
                                 for (const next of log.children) {
                                     if (game.messages.get(next.dataset.messageId)?._ccsLogged) return next.dataset.messageId;
                                 }
@@ -124,7 +126,7 @@ export class ChatOptimizer {
             });
         };
 
-        ChatLog.prototype.ccsSchedulePrune = function (timeout = 250) {
+        ChatLog.prototype.ccsSchedulePrune = function(timeout = 250) {
             if (this._ccsPruneTimeout) {
                 window.clearTimeout(this._ccsPruneTimeout);
             }
@@ -135,7 +137,7 @@ export class ChatOptimizer {
         };
 
         // Render Batch
-        ChatLog.prototype.ccsRenderBatch = function (size) {
+        ChatLog.prototype.ccsRenderBatch = function(size) {
             if (this._ccsRenderingBatch) return;
             this._ccsRenderingBatch = true;
 
@@ -152,17 +154,16 @@ export class ChatOptimizer {
                 if (lastIdx !== 0) {
                     const targetIdx = Math.max(lastIdx - size, 0);
                     const elements = [];
-
+                    
                     for (let i = targetIdx; i < lastIdx; i++) {
                         const message = messages[i];
                         if (!message.visible) continue;
-
+                        
                         message._ccsLogged = true;
                         try {
-                            // [수정] getHTML -> renderHTML (v13 호환성)
                             const html = await message.renderHTML();
                             const node = (html instanceof HTMLElement) ? html : html[0];
-                            if (node) elements.push(node);
+                            if(node) elements.push(node);
                         } catch (err) {
                             console.error(`ChatSelector | Failed to render message ${message.id}`, err);
                         }
@@ -170,6 +171,9 @@ export class ChatOptimizer {
 
                     const logs = getAllChatLogs();
                     logs.forEach(log => {
+                        // 접힌 사이드바에는 과거 기록을 불러오지 않음
+                        if (log.closest('.overflow')) return;
+
                         const scroll = log.closest('.chat-scroll') || log.parentElement;
                         if (!scroll) return;
 
@@ -184,12 +188,12 @@ export class ChatOptimizer {
                         const heightDiff = newHeight - prevHeight;
                         scroll.scrollTop = prevTop + heightDiff;
                     });
-
+                    
                     if (messages[targetIdx]) {
                         this._ccsLastId = messages[targetIdx].id;
                     }
                 }
-
+                
                 this._ccsRenderingBatch = false;
                 if (!this.isPopout) this.ccsOverflowDebounce();
                 this.ccsSchedulePrune(5000);
@@ -197,16 +201,15 @@ export class ChatOptimizer {
         };
 
         // postOne
-        ChatLog.prototype.postOne = async function (message, notify = false) {
+        ChatLog.prototype.postOne = async function(message, notify = false) {
             if (!message.visible) return;
 
             return this.ccsRenderingQueue.add(async () => {
                 if (!this.rendered) return;
-
+                
                 message._ccsLogged = true;
                 if (!this._ccsLastId) this._ccsLastId = message.id;
 
-                // [수정] getHTML -> renderHTML (v13 호환성)
                 const html = await message.renderHTML();
                 const logs = getAllChatLogs();
 
@@ -219,13 +222,29 @@ export class ChatOptimizer {
                     const scroll = log.closest('.chat-scroll') || log.parentElement;
                     if (!scroll) return;
 
+                    // 여기가 '접힌 사이드바(Overflow)'인지 확인
+                    const isOverflow = log.closest('.overflow');
+
                     const dist = scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop;
                     const wasAtBottom = dist < 20;
 
-                    log.append(node.cloneNode(true));
+                    const li = node.cloneNode(true);
+                    log.append(li);
 
-                    if (wasAtBottom || message.isAuthor) {
+                    // 접힌 곳이거나, 바닥을 보고 있거나, 내가 쓴 글이면 스크롤 내림
+                    if (wasAtBottom || message.isAuthor || isOverflow) {
                         scroll.scrollTop = scroll.scrollHeight;
+                    }
+
+                    // 접힌 사이드바라면 5초 뒤에 페이드 아웃 후 삭제
+                    if (isOverflow) {
+                        setTimeout(() => {
+                            if (li && li.parentElement) {
+                                li.style.transition = "opacity 1s ease-out"; 
+                                li.style.opacity = "0";
+                                setTimeout(() => li.remove(), 1000);
+                            }
+                        }, 5000); // 5초 대기
                     }
                 });
 
@@ -238,12 +257,12 @@ export class ChatOptimizer {
             });
         };
 
-        // _onScrollLog
-        ChatLog.prototype._onScrollLog = function (event) {
+        // [Override] _onScrollLog
+        ChatLog.prototype._onScrollLog = function(event) {
             if (!this.rendered) return;
-
+            
             const scroll = event?.currentTarget;
-            if (!scroll) return;
+            if(!scroll) return;
 
             const el = scroll.closest('#sidebar') || scroll.closest('.overflow') || scroll.parentElement;
             const jumpEl = el?.querySelector(".jump-to-bottom");
@@ -260,15 +279,14 @@ export class ChatOptimizer {
                 else jumpEl.classList.remove("hidden");
             }
         };
-
+        
         // deleteMessage
         ChatLog.prototype.deleteMessage = function(messageId, { deleteAll = false } = {}) {
-
+            // 요청 시간 측정 (큐 진입 전)
             const now = Date.now();
             const diff = now - (this._ccsLastReqTime || 0);
             this._ccsLastReqTime = now;
-            
-            const isRapid = diff < 100; 
+            const isRapid = diff < 100; // 100ms 미만 간격이면 고속 삭제 모드
 
             return this.ccsRenderingQueue.add(async () => {
                 if (!this.rendered) return;
@@ -302,7 +320,7 @@ export class ChatOptimizer {
                          }
 
                          if (isRapid) {
-                             li.remove(); 
+                             li.remove(); // 즉시 삭제
                          } else {
                              li.style.height = `${li.offsetHeight}px`;
                              li.classList.add("deleting");
@@ -319,13 +337,13 @@ export class ChatOptimizer {
                 }
             });
         };
-
+        
         const originalAttachListeners = ChatLog.prototype._attachLogListeners;
-        ChatLog.prototype._attachLogListeners = function (html) {
+        ChatLog.prototype._attachLogListeners = function(html) {
             originalAttachListeners.call(this, html);
             const $html = (html instanceof HTMLElement) ? $(html) : html;
             const scrollEl = $html.find(".chat-scroll");
-            scrollEl.off("scroll");
+            scrollEl.off("scroll"); 
             scrollEl.on("scroll", this._onScrollLog.bind(this));
         };
     }
