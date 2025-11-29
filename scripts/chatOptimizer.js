@@ -81,7 +81,7 @@ export class ChatOptimizer {
             }
         });
 
-        // [Override] Prune
+        // Prune
         ChatLog.prototype.ccsPrune = function () {
             const max = game.settings.get(self.ID, self.SETTINGS.MAX_MESSAGES);
             const logs = getAllChatLogs();
@@ -134,7 +134,7 @@ export class ChatOptimizer {
             }, timeout);
         };
 
-        // [Override] Render Batch
+        // Render Batch
         ChatLog.prototype.ccsRenderBatch = function (size) {
             if (this._ccsRenderingBatch) return;
             this._ccsRenderingBatch = true;
@@ -196,7 +196,7 @@ export class ChatOptimizer {
             });
         };
 
-        // [Override] postOne
+        // postOne
         ChatLog.prototype.postOne = async function (message, notify = false) {
             if (!message.visible) return;
 
@@ -238,7 +238,7 @@ export class ChatOptimizer {
             });
         };
 
-        // [Override] _onScrollLog
+        // _onScrollLog
         ChatLog.prototype._onScrollLog = function (event) {
             if (!this.rendered) return;
 
@@ -261,22 +261,18 @@ export class ChatOptimizer {
             }
         };
 
-// [Override] deleteMessage (요청 시간 기준 가속)
+        // deleteMessage
         ChatLog.prototype.deleteMessage = function(messageId, { deleteAll = false } = {}) {
-            // 1. [핵심] 큐에 넣기 '전'에 요청 시간을 측정합니다.
-            // 휴지통 버튼을 누르면 이 부분은 순식간에 수십 번 실행됩니다.
+
             const now = Date.now();
             const diff = now - (this._ccsLastReqTime || 0);
             this._ccsLastReqTime = now;
             
-            // 요청 간격이 100ms 미만이면 "급한 삭제"로 판단
-            // (첫 번째 메시지는 false라서 애니메이션이 나오지만, 두 번째부터는 true가 되어 즉시 삭제됨)
             const isRapid = diff < 100; 
 
             return this.ccsRenderingQueue.add(async () => {
                 if (!this.rendered) return;
 
-                // [전체 삭제 명령]
                 if (deleteAll) {
                     this._ccsLastId = null;
                     const logs = document.querySelectorAll('.chat-log');
@@ -293,7 +289,6 @@ export class ChatOptimizer {
                 logs.forEach(log => {
                      const li = log.querySelector(`.message[data-message-id="${messageId}"]`);
                      if (li) {
-                         // Last ID 갱신
                          if (messageId === this._ccsLastId && log.closest('#sidebar')) {
                             let next = li;
                             let foundNext = null;
@@ -306,9 +301,8 @@ export class ChatOptimizer {
                             this._ccsLastId = foundNext;
                          }
 
-                         // [분기] 아까 측정한 isRapid 값 사용
                          if (isRapid) {
-                             li.remove(); // 즉시 삭제
+                             li.remove(); 
                          } else {
                              li.style.height = `${li.offsetHeight}px`;
                              li.classList.add("deleting");
@@ -317,7 +311,6 @@ export class ChatOptimizer {
                      }
                 });
 
-                // 애니메이션 재생 (isRapid가 false일 때만 타겟이 있음)
                 if (targets.length > 0) {
                     await new Promise(r => setTimeout(r, 100));
                     targets.forEach(li => li.style.height = "0");
