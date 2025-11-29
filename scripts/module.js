@@ -2,7 +2,7 @@ import { ChatSelector } from './chatSelector.js';
 import { HotkeyManager } from './hotkeyManager.js';
 import { ChatEditor } from './chatEditor.js'; 
 import { ChatAutocomplete } from './chatAutocomplete.js';
-import { ChatOptimizer } from './chatOptimizer.js'; // [추가됨]
+import { ChatOptimizer } from './chatOptimizer.js';
 
 
 Hooks.once('init', () => {
@@ -11,7 +11,7 @@ Hooks.once('init', () => {
     HotkeyManager.initialize();
     ChatEditor.initialize(); 
     ChatAutocomplete.initialize();
-    ChatOptimizer.initialize(); // [추가됨]    
+    ChatOptimizer.initialize();    
 });
 
 // 채팅 메시지 생성 전에 추가 처리
@@ -20,7 +20,12 @@ Hooks.on('preCreateChatMessage', (message, options, userId) => {
     if (select && select.value) {
         const actor = game.actors.get(select.value);
         if (actor) {
-            // updateSource를 사용하여 문서 생성 전 데이터를 안전하게 변경
+            // [수정] chatSelector.js가 이미 올바른 토큰을 설정했다면(액터 ID가 같고 토큰 ID가 존재하면) 덮어쓰지 않고 유지합니다.
+            if (message.speaker.actor === actor.id && message.speaker.token) {
+                return true;
+            }
+
+            // 그 외의 경우(시트에서 롤을 굴리는 등)에는 액터 정보를 강제하되 토큰은 비웁니다.
             message.updateSource({
                 speaker: {
                     actor: actor.id,

@@ -17,7 +17,7 @@ export class ChatAutocomplete {
 
         // 데이터 변경 시 캐시 갱신 (디바운스 적용으로 과부하 방지)
         const debouncedUpdate = foundry.utils.debounce(() => this._updateCache(), 200);
-        
+
         Hooks.on('createActor', debouncedUpdate);
         Hooks.on('deleteActor', debouncedUpdate);
         Hooks.on('updateActor', (actor, changes) => {
@@ -34,7 +34,7 @@ export class ChatAutocomplete {
     // [최적화] 무거운 Actor 객체 대신 {id, name, img}만 있는 가벼운 객체(POJO)로 변환하여 저장
     static _updateCache() {
         if (!game.user) return;
-        
+
         // game.actors를 순회하는 것은 여기서 딱 한 번만 수행
         this._cachedActors = game.actors
             .filter(actor => {
@@ -48,7 +48,7 @@ export class ChatAutocomplete {
                 nameLower: a.name.toLowerCase() // 검색 속도 향상을 위해 미리 소문자 변환
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
-            
+
         console.log(`Character Chat Selector | Cached ${this._cachedActors.length} actors for autocomplete.`);
     }
 
@@ -144,7 +144,7 @@ export class ChatAutocomplete {
     static _searchAndRender(query, listContainer, chatInput) {
         // [최적화] 이미 가볍게 변환된 this._cachedActors 사용
         let matches = [];
-        
+
         if (!query || !query.trim()) {
             matches = this._cachedActors;
         } else {
@@ -175,7 +175,7 @@ export class ChatAutocomplete {
             const div = document.createElement('div');
             div.className = `autocomplete-item ${index === 0 ? 'active' : ''}`;
             div.dataset.index = index;
-            
+
             div.innerHTML = `
             <img src="${actor.img}" width="24" height="24" style="border:none; vertical-align:middle;"/>
             <span>${actor.name}</span>
@@ -201,7 +201,7 @@ export class ChatAutocomplete {
             moreDiv.style.fontStyle = 'italic';
             moreDiv.style.color = '#888';
             moreDiv.textContent = `...and ${matches.length - MAX_RESULTS} more`;
-            moreDiv.style.pointerEvents = 'none'; 
+            moreDiv.style.pointerEvents = 'none';
             fragment.appendChild(moreDiv);
         }
 
@@ -213,7 +213,7 @@ export class ChatAutocomplete {
     }
 
     static _moveSelection(direction, container) {
-        const max = Math.min(this.state.matches.length, 20); 
+        const max = Math.min(this.state.matches.length, 20);
         if (max === 0) return;
 
         let newIndex = this.state.selectedIndex + direction;
@@ -225,7 +225,7 @@ export class ChatAutocomplete {
 
         const items = container.querySelectorAll('.autocomplete-item');
         items.forEach(item => item.classList.remove('active'));
-        
+
         if (items[newIndex] && !items[newIndex].textContent.startsWith('...and')) {
             items[newIndex].classList.add('active');
             items[newIndex].scrollIntoView({ block: 'nearest' });
@@ -236,18 +236,8 @@ export class ChatAutocomplete {
         const actor = this.state.matches[index];
         if (!actor) return;
 
-        const select = document.querySelector('.character-select');
-        const customSelect = document.querySelector('.custom-select');
-
-        if (select) {
-            select.value = actor.id;
-            if (customSelect) {
-                const selectedDiv = customSelect.querySelector('.select-selected');
-                if (selectedDiv) selectedDiv.textContent = actor.name;
-            }
-            ChatSelector._onCharacterSelect({ target: { value: actor.id } });
-            ui.notifications.info(game.i18n.format("CHATSELECTOR.Info.CharacterChanged", { name: actor.name }));
-        }
+        // [핵심] 중복 로직 제거 후 통합 메서드 호출
+        ChatSelector.selectActor(actor.id);
 
         chatInput.value = '';
         this._closeList(container);

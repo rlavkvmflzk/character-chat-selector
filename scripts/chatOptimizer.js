@@ -58,10 +58,8 @@ export class ChatOptimizer {
         const ChatLog = foundry.applications.sidebar.tabs.ChatLog;
         const self = this;
 
-        const getElement = (app) => {
-            if (!app.element) return null;
-            return (app.element instanceof HTMLElement) ? app.element : app.element[0];
-        };
+        // 모든 채팅 로그(사이드바 + v13 접힘 상태)를 찾기 위한 헬퍼
+        const getAllChatLogs = () => document.querySelectorAll('.chat-log');
 
         Object.defineProperty(CONFIG.ChatMessage, 'batchSize', {
             get: () => game.settings.get(self.ID, self.SETTINGS.BATCH_SIZE)
@@ -76,57 +74,57 @@ export class ChatOptimizer {
         Object.defineProperty(ChatLog.prototype, "ccsOverflowDebounce", {
             get() {
                 return this._ccsOverflowDebounce ?? (this._ccsOverflowDebounce = foundry.utils.debounce(() => {
-                    const el = getElement(this);
-                    const scroll = el?.querySelector(".chat-scroll");
-                    if(scroll) scroll.classList.toggle("overflowed", scroll.scrollHeight > scroll.offsetHeight);
+                    document.querySelectorAll(".chat-scroll").forEach(scroll => {
+                        scroll.classList.toggle("overflowed", scroll.scrollHeight > scroll.offsetHeight);
+                    });
                 }, 100));
             }
         });
 
-        // 3. 메서드 오버라이딩
-
-        // [New] Prune
-        ChatLog.prototype.ccsPrune = function() {
-            const el = getElement(this);
-            const log = el?.querySelector(".chat-log");
-            const scroll = el?.querySelector(".chat-scroll");
+        // [Override] Prune
+        ChatLog.prototype.ccsPrune = function () {
             const max = game.settings.get(self.ID, self.SETTINGS.MAX_MESSAGES);
+            const logs = getAllChatLogs();
 
-            if (log?.childElementCount > max) {
-                // 현재 스크롤이 바닥 근처가 아니라면 삭제 보류 (사용자가 위쪽을 읽는 중일 수 있음)
-                // 삭제 시 스크롤 튀는 현상 방지
-                const dist = scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop;
-                if (dist > 50) {
-                    this.ccsSchedulePrune(2000);
-                    return;
-                }
+            logs.forEach(log => {
+                if (log.childElementCount > max) {
+                    const scroll = log.closest('.chat-scroll') || log.parentElement;
+                    if (!scroll) return;
 
-                this.ccsRenderingQueue.add(async () => {
-                    const count = log.childElementCount;
-                    const toRemoveCount = count - max;
-                    if (toRemoveCount <= 0) return;
+                    const dist = scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop;
+                    if (dist > 50) {
+                        this.ccsSchedulePrune(2000);
+                        return;
+                    }
 
-                    const children = [...log.children];
-                    const toRemove = children.slice(0, toRemoveCount);
+                    this.ccsRenderingQueue.add(async () => {
+                        const count = log.childElementCount;
+                        const toRemoveCount = count - max;
+                        if (toRemoveCount <= 0) return;
 
-                    toRemove.forEach((li) => {
-                        const msg = game.messages.get(li.dataset.messageId);
-                        if (msg) msg._ccsLogged = false; 
-                        li.remove();
-                    });
+                        const children = [...log.children];
+                        const toRemove = children.slice(0, toRemoveCount);
 
-                    this._ccsLastId = (() => {
-                        for (const next of log.children) {
-                            if (game.messages.get(next.dataset.messageId)?._ccsLogged) return next.dataset.messageId;
+                        toRemove.forEach((li) => {
+                            const msg = game.messages.get(li.dataset.messageId);
+                            if (msg) msg._ccsLogged = false;
+                            li.remove();
+                        });
+
+                        if (log.closest('#sidebar')) {
+                            this._ccsLastId = (() => {
+                                for (const next of log.children) {
+                                    if (game.messages.get(next.dataset.messageId)?._ccsLogged) return next.dataset.messageId;
+                                }
+                                return null;
+                            })();
                         }
-                        return null;
-                    })();
-                });
-            }
+                    });
+                }
+            });
         };
 
-        // [New] Schedule Prune
-        ChatLog.prototype.ccsSchedulePrune = function(timeout = 250) {
+        ChatLog.prototype.ccsSchedulePrune = function (timeout = 250) {
             if (this._ccsPruneTimeout) {
                 window.clearTimeout(this._ccsPruneTimeout);
             }
@@ -136,8 +134,8 @@ export class ChatOptimizer {
             }, timeout);
         };
 
-        // [New] Render Batch (무한 스크롤 - 핵심 수정)
-        ChatLog.prototype.ccsRenderBatch = function(size) {
+        // [Override] Render Batch
+        ChatLog.prototype.ccsRenderBatch = function (size) {
             if (this._ccsRenderingBatch) return;
             this._ccsRenderingBatch = true;
 
@@ -154,79 +152,82 @@ export class ChatOptimizer {
                 if (lastIdx !== 0) {
                     const targetIdx = Math.max(lastIdx - size, 0);
                     const elements = [];
-                    
+
                     for (let i = targetIdx; i < lastIdx; i++) {
                         const message = messages[i];
                         if (!message.visible) continue;
-                        
+
                         message._ccsLogged = true;
                         try {
-                            const html = await message.getHTML();
+                            // [수정] getHTML -> renderHTML (v13 호환성)
+                            const html = await message.renderHTML();
                             const node = (html instanceof HTMLElement) ? html : html[0];
-                            if(node) elements.push(node);
+                            if (node) elements.push(node);
                         } catch (err) {
                             console.error(`ChatSelector | Failed to render message ${message.id}`, err);
                         }
                     }
 
-                    const el = getElement(this);
-                    const log = el?.querySelector(".chat-log");
-                    const scroll = el?.querySelector(".chat-scroll");
-                    
-                    if (log && scroll) {
-                        // [핵심] 높이 변화량만큼 스크롤 위치 보정 (Jitter 방지)
+                    const logs = getAllChatLogs();
+                    logs.forEach(log => {
+                        const scroll = log.closest('.chat-scroll') || log.parentElement;
+                        if (!scroll) return;
+
                         const prevHeight = scroll.scrollHeight;
                         const prevTop = scroll.scrollTop;
 
-                        log.prepend(...elements);
+                        elements.forEach(el => {
+                            log.prepend(el.cloneNode(true));
+                        });
 
                         const newHeight = scroll.scrollHeight;
                         const heightDiff = newHeight - prevHeight;
-                        
-                        // 내용이 추가된 만큼 스크롤을 아래로 밀어줌 -> 시각적 위치 고정
                         scroll.scrollTop = prevTop + heightDiff;
-                        
+                    });
+
+                    if (messages[targetIdx]) {
                         this._ccsLastId = messages[targetIdx].id;
                     }
                 }
-                
+
                 this._ccsRenderingBatch = false;
                 if (!this.isPopout) this.ccsOverflowDebounce();
                 this.ccsSchedulePrune(5000);
             });
         };
 
-        // [Override] postOne: 메시지 추가 (강제 스크롤 방지 로직 강화)
-        ChatLog.prototype.postOne = async function(message, notify = false) {
+        // [Override] postOne
+        ChatLog.prototype.postOne = async function (message, notify = false) {
             if (!message.visible) return;
 
             return this.ccsRenderingQueue.add(async () => {
                 if (!this.rendered) return;
-                
+
                 message._ccsLogged = true;
                 if (!this._ccsLastId) this._ccsLastId = message.id;
 
-                const html = await message.getHTML();
-                const el = getElement(this);
-                const list = el?.querySelector(".chat-log");
-                const scroll = el?.querySelector(".chat-scroll");
+                // [수정] getHTML -> renderHTML (v13 호환성)
+                const html = await message.renderHTML();
+                const logs = getAllChatLogs();
 
-                if (!list || !scroll) return; 
-
-                // [중요] 변수에 의존하지 않고, 메시지를 추가하기 직전의 DOM 상태를 계산
-                // 바닥에서 20px 이내에 있으면 '바닥을 보고 있다'고 판단 (좀 더 엄격하게)
-                const dist = scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop;
-                const wasAtBottom = dist < 20;
+                if (logs.length === 0) return;
 
                 const node = (html instanceof HTMLElement) ? html : html[0];
-                if (node) list.append(node);
+                if (!node) return;
 
-                // 1. 내가 쓴 글이면 무조건 내림
-                // 2. 내가 바닥을 보고 있었다면(wasAtBottom) 내림
-                // -> 내가 위를 보고 있었다면(wasAtBottom == false) 절대 내리지 않음
-                if (wasAtBottom || message.isAuthor) {
-                    this.scrollBottom({ waitImages: true });
-                }
+                logs.forEach(log => {
+                    const scroll = log.closest('.chat-scroll') || log.parentElement;
+                    if (!scroll) return;
+
+                    const dist = scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop;
+                    const wasAtBottom = dist < 20;
+
+                    log.append(node.cloneNode(true));
+
+                    if (wasAtBottom || message.isAuthor) {
+                        scroll.scrollTop = scroll.scrollHeight;
+                    }
+                });
 
                 if (notify) this.notify(message);
 
@@ -238,19 +239,17 @@ export class ChatOptimizer {
         };
 
         // [Override] _onScrollLog
-        ChatLog.prototype._onScrollLog = function(event) {
+        ChatLog.prototype._onScrollLog = function (event) {
             if (!this.rendered) return;
-            
-            const el = getElement(this);
-            const scroll = event?.currentTarget ?? el?.querySelector(".chat-scroll");
-            if(!scroll) return;
 
+            const scroll = event?.currentTarget;
+            if (!scroll) return;
+
+            const el = scroll.closest('#sidebar') || scroll.closest('.overflow') || scroll.parentElement;
             const jumpEl = el?.querySelector(".jump-to-bottom");
 
-            // 바닥 상태 체크 (UI 표시용)
             const isAtBottom = (scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop) < 50;
 
-            // 위로 스크롤 시 배치 렌더링 (상단 50px 이내 진입 시)
             if (scroll.scrollTop < 50 && !this._ccsRenderingBatch) {
                 const batchSize = game.settings.get(self.ID, self.SETTINGS.BATCH_SIZE);
                 this.ccsRenderBatch(batchSize);
@@ -261,50 +260,79 @@ export class ChatOptimizer {
                 else jumpEl.classList.remove("hidden");
             }
         };
-        
-        // [Override] deleteMessage
+
+// [Override] deleteMessage (요청 시간 기준 가속)
         ChatLog.prototype.deleteMessage = function(messageId, { deleteAll = false } = {}) {
+            // 1. [핵심] 큐에 넣기 '전'에 요청 시간을 측정합니다.
+            // 휴지통 버튼을 누르면 이 부분은 순식간에 수십 번 실행됩니다.
+            const now = Date.now();
+            const diff = now - (this._ccsLastReqTime || 0);
+            this._ccsLastReqTime = now;
+            
+            // 요청 간격이 100ms 미만이면 "급한 삭제"로 판단
+            // (첫 번째 메시지는 false라서 애니메이션이 나오지만, 두 번째부터는 true가 되어 즉시 삭제됨)
+            const isRapid = diff < 100; 
+
             return this.ccsRenderingQueue.add(async () => {
                 if (!this.rendered) return;
+
+                // [전체 삭제 명령]
+                if (deleteAll) {
+                    this._ccsLastId = null;
+                    const logs = document.querySelectorAll('.chat-log');
+                    logs.forEach(log => log.innerHTML = ""); 
+                    return; 
+                }
 
                 const message = game.messages.get(messageId);
                 if (message) message._ccsLogged = false;
 
-                const el = getElement(this);
-                const li = el?.querySelector(`.message[data-message-id="${messageId}"]`);
-                if (!li) return;
+                const logs = document.querySelectorAll('.chat-log');
+                const targets = [];
 
-                if (deleteAll) {
-                    this._ccsLastId = null;
-                } else if (messageId === this._ccsLastId) {
-                    let next = li;
-                    let foundNext = null;
-                    while ((next = next.nextElementSibling)) {
-                        if (game.messages.get(next.dataset.messageId)?._ccsLogged) {
-                            foundNext = next.dataset.messageId;
-                            break;
-                        }
-                    }
-                    this._ccsLastId = foundNext;
+                logs.forEach(log => {
+                     const li = log.querySelector(`.message[data-message-id="${messageId}"]`);
+                     if (li) {
+                         // Last ID 갱신
+                         if (messageId === this._ccsLastId && log.closest('#sidebar')) {
+                            let next = li;
+                            let foundNext = null;
+                            while ((next = next.nextElementSibling)) {
+                                if (game.messages.get(next.dataset.messageId)?._ccsLogged) {
+                                    foundNext = next.dataset.messageId;
+                                    break;
+                                }
+                            }
+                            this._ccsLastId = foundNext;
+                         }
+
+                         // [분기] 아까 측정한 isRapid 값 사용
+                         if (isRapid) {
+                             li.remove(); // 즉시 삭제
+                         } else {
+                             li.style.height = `${li.offsetHeight}px`;
+                             li.classList.add("deleting");
+                             targets.push(li);
+                         }
+                     }
+                });
+
+                // 애니메이션 재생 (isRapid가 false일 때만 타겟이 있음)
+                if (targets.length > 0) {
+                    await new Promise(r => setTimeout(r, 100));
+                    targets.forEach(li => li.style.height = "0");
+                    await new Promise(r => setTimeout(r, 100));
+                    targets.forEach(li => li.remove());
                 }
-
-                li.style.height = `${li.offsetHeight}px`;
-                li.classList.add("deleting");
-                
-                await new Promise(r => setTimeout(r, 100));
-                li.style.height = "0";
-                
-                await new Promise(r => setTimeout(r, 100));
-                li.remove();
             });
         };
-        
+
         const originalAttachListeners = ChatLog.prototype._attachLogListeners;
-        ChatLog.prototype._attachLogListeners = function(html) {
+        ChatLog.prototype._attachLogListeners = function (html) {
             originalAttachListeners.call(this, html);
             const $html = (html instanceof HTMLElement) ? $(html) : html;
             const scrollEl = $html.find(".chat-scroll");
-            scrollEl.off("scroll"); 
+            scrollEl.off("scroll");
             scrollEl.on("scroll", this._onScrollLog.bind(this));
         };
     }
