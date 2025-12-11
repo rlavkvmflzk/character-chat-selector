@@ -37,7 +37,7 @@ export class ChatSelector {
             console.log("ChatSelector | Ready Hook Triggered"); // DEBUG
 
             if (ui.chat && !this.originalProcessMessage) {
-                console.log("ChatSelector | Saving ORIGINAL processMessage (Ready)"); 
+                console.log("ChatSelector | Saving ORIGINAL processMessage (Ready)");
                 this.originalProcessMessage = ui.chat.processMessage;
             } else if (!ui.chat) {
                 console.error("ChatSelector | CRITICAL: ui.chat is undefined even in ready hook!");
@@ -55,7 +55,8 @@ export class ChatSelector {
         });
 
         Hooks.on("collapseSidebar", (sidebar, collapsed) => {
-            this._updateSelectorVisibility(null, collapsed);
+            // sidebar 인스턴스에서 직접 탭 정보를 가져와 전달하여 타이밍 이슈 방지
+            this._updateSelectorVisibility(sidebar.activeTab, collapsed);
         });
 
         Hooks.on("changeSidebarTab", (app) => {
@@ -645,7 +646,7 @@ export class ChatSelector {
         });
     }
 
-static _updateSelectorVisibility(forceTabName = null, forceCollapsed = null) {
+    static _updateSelectorVisibility(forceTabName = null, forceCollapsed = null) {
         const selector = document.querySelector('.character-chat-selector');
         if (!selector) return;
 
@@ -660,11 +661,11 @@ static _updateSelectorVisibility(forceTabName = null, forceCollapsed = null) {
         }
 
         let activeTab = forceTabName;
-        
+
         if (!activeTab && ui.sidebar) {
             activeTab = ui.sidebar.activeTab;
         }
-        
+
         if (!activeTab) {
             const activeTabIcon = document.querySelector('#sidebar-tabs > .item.active');
             if (activeTabIcon) {
@@ -672,9 +673,15 @@ static _updateSelectorVisibility(forceTabName = null, forceCollapsed = null) {
             }
         }
 
+        // [추가된 부분] 탭 정보를 여전히 찾을 수 없다면(초기 로딩/애니메이션 중) 'chat'으로 간주
+        if (!activeTab) {
+            activeTab = 'chat';
+        }
+
         const isChatTab = activeTab === 'chat';
 
         if (!isCollapsed && isChatTab) {
+            // ... (이후 동일)
             selector.style.removeProperty('display');
             selector.style.removeProperty('visibility');
             selector.style.removeProperty('opacity');
@@ -850,28 +857,25 @@ static _updateSelectorVisibility(forceTabName = null, forceCollapsed = null) {
         };
 
         const selectorHtml = `
-        <div class="character-chat-selector" style="display: none;">
-            <select class="character-select" style="display: none;">
-                <option value="">${game.i18n.localize("CHATSELECTOR.Default")}</option>
-                ${getCharacterOptionTags()}
-            </select>
-            <div class="custom-select">
-                <div class="select-selected">${selectedName}</div>
-                <div class="select-items">
-                    <div class="select-item" data-value="">
-                        <span>${game.i18n.localize("CHATSELECTOR.Default")}</span>
+            <div class="character-chat-selector" style="display: none;">
+                <select class="character-select" style="display: none;">
+                    <option value="">${game.i18n.localize("CHATSELECTOR.Default")}</option>
+                    ${getCharacterOptionTags()}
+                </select>
+                <div class="custom-select">
+                    <div class="select-selected">${selectedName}</div>
+                    <div class="select-items">
+                        <div class="select-item" data-value="">
+                            <span>${game.i18n.localize("CHATSELECTOR.Default")}</span>
+                        </div>
+                        ${this._getCharacterOptions(finalActorId)}
                     </div>
-                    ${this._getCharacterOptions(finalActorId)}
                 </div>
+                <button type="button" class="configure-hotkeys" title="${game.i18n.localize("CHATSELECTOR.ConfigureHotkeys")}">
+                    <i class="fas fa-keyboard"></i>
+                </button>
             </div>
-            <button class="refresh-characters" title="${game.i18n.localize("CHATSELECTOR.RefreshList")}">
-                <i class="fas fa-sync"></i>
-            </button>
-            <button type="button" class="configure-hotkeys" title="${game.i18n.localize("CHATSELECTOR.ConfigureHotkeys")}">
-                <i class="fas fa-keyboard"></i>
-            </button>
-        </div>
-        `;
+            `;
 
         chatControls.insertAdjacentHTML('beforeend', selectorHtml);
 
@@ -901,7 +905,6 @@ static _updateSelectorVisibility(forceTabName = null, forceCollapsed = null) {
         const selectDiv = document.querySelector('.custom-select');
         const selected = selectDiv?.querySelector('.select-selected');
         const itemsDiv = selectDiv?.querySelector('.select-items');
-        const refreshButton = document.querySelector('.refresh-characters');
 
         if (selected) {
             selected.addEventListener('click', () => {
@@ -968,12 +971,6 @@ static _updateSelectorVisibility(forceTabName = null, forceCollapsed = null) {
                 itemsDiv?.classList.remove('show');
             }
         });
-
-        if (refreshButton) {
-            refreshButton.addEventListener('click', () => {
-                this.refreshSelector();
-            });
-        }
     }
 
     // [추가] 안전한 목록 새로고침 메서드

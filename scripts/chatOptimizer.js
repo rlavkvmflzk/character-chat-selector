@@ -136,7 +136,7 @@ export class ChatOptimizer {
             }, timeout);
         };
 
-        // Render Batch
+        // Render Batch 
         ChatLog.prototype.ccsRenderBatch = function(size) {
             if (this._ccsRenderingBatch) return;
             this._ccsRenderingBatch = true;
@@ -153,41 +153,40 @@ export class ChatOptimizer {
 
                 if (lastIdx !== 0) {
                     const targetIdx = Math.max(lastIdx - size, 0);
-                    const elements = [];
-                    
+                    const messagesToRender = [];
                     for (let i = targetIdx; i < lastIdx; i++) {
-                        const message = messages[i];
-                        if (!message.visible) continue;
-                        
-                        message._ccsLogged = true;
-                        try {
-                            const html = await message.renderHTML();
-                            const node = (html instanceof HTMLElement) ? html : html[0];
-                            if(node) elements.push(node);
-                        } catch (err) {
-                            console.error(`ChatSelector | Failed to render message ${message.id}`, err);
-                        }
+                        if (messages[i].visible) messagesToRender.push(messages[i]);
                     }
+                    
+                    // 로그 상태 미리 업데이트
+                    messagesToRender.forEach(m => m._ccsLogged = true);
 
                     const logs = getAllChatLogs();
-                    logs.forEach(log => {
-                        // 접힌 사이드바에는 과거 기록을 불러오지 않음
-                        if (log.closest('.overflow')) return;
+                    
+                    for (const log of logs) {
+                        if (log.closest('.overflow')) continue;
 
                         const scroll = log.closest('.chat-scroll') || log.parentElement;
-                        if (!scroll) return;
+                        if (!scroll) continue;
 
                         const prevHeight = scroll.scrollHeight;
                         const prevTop = scroll.scrollTop;
 
-                        elements.forEach(el => {
-                            log.prepend(el.cloneNode(true));
+                        // 해당 로그를 위한 HTML 생성 (병렬 처리로 성능 확보)
+                        const htmls = await Promise.all(messagesToRender.map(m => m.renderHTML()));
+                        
+                        const fragment = document.createDocumentFragment();
+                        htmls.forEach(html => {
+                            const node = (html instanceof HTMLElement) ? html : html[0];
+                            if (node) fragment.appendChild(node);
                         });
+
+                        log.prepend(fragment);
 
                         const newHeight = scroll.scrollHeight;
                         const heightDiff = newHeight - prevHeight;
                         scroll.scrollTop = prevTop + heightDiff;
-                    });
+                    }
                     
                     if (messages[targetIdx]) {
                         this._ccsLastId = messages[targetIdx].id;
@@ -200,7 +199,7 @@ export class ChatOptimizer {
             });
         };
 
-        // postOne
+        // postOne (새 메시지 등록)
         ChatLog.prototype.postOne = async function(message, notify = false) {
             if (!message.visible) return;
 
@@ -210,43 +209,44 @@ export class ChatOptimizer {
                 message._ccsLogged = true;
                 if (!this._ccsLastId) this._ccsLastId = message.id;
 
-                const html = await message.renderHTML();
                 const logs = getAllChatLogs();
-
                 if (logs.length === 0) return;
 
-                const node = (html instanceof HTMLElement) ? html : html[0];
-                if (!node) return;
-
-                logs.forEach(log => {
+                for (const log of logs) {
                     const scroll = log.closest('.chat-scroll') || log.parentElement;
-                    if (!scroll) return;
+                    if (!scroll) continue;
 
                     // 여기가 '접힌 사이드바(Overflow)'인지 확인
                     const isOverflow = log.closest('.overflow');
 
+                    // 스크롤 위치 계산
                     const dist = scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop;
                     const wasAtBottom = dist < 20;
 
-                    const li = node.cloneNode(true);
-                    log.append(li);
+                    // 원본 HTML 생성 (이 과정에서 renderChatMessage 훅이 실행되어 타 모듈 기능이 부착됨)
+                    const html = await message.renderHTML();
+                    const node = (html instanceof HTMLElement) ? html : html[0];
+                    
+                    if (node) {
+                        log.append(node);
 
-                    // 접힌 곳이거나, 바닥을 보고 있거나, 내가 쓴 글이면 스크롤 내림
-                    if (wasAtBottom || message.isAuthor || isOverflow) {
-                        scroll.scrollTop = scroll.scrollHeight;
-                    }
+                        // 스크롤 처리
+                        if (wasAtBottom || message.isAuthor || isOverflow) {
+                            scroll.scrollTop = scroll.scrollHeight;
+                        }
 
-                    // 접힌 사이드바라면 5초 뒤에 페이드 아웃 후 삭제
-                    if (isOverflow) {
-                        setTimeout(() => {
-                            if (li && li.parentElement) {
-                                li.style.transition = "opacity 1s ease-out"; 
-                                li.style.opacity = "0";
-                                setTimeout(() => li.remove(), 1000);
-                            }
-                        }, 5000); // 5초 대기
+                        // 접힌 사이드바라면 페이드 아웃
+                        if (isOverflow) {
+                            setTimeout(() => {
+                                if (node && node.parentElement) {
+                                    node.style.transition = "opacity 1s ease-out"; 
+                                    node.style.opacity = "0";
+                                    setTimeout(() => node.remove(), 1000);
+                                }
+                            }, 5000);
+                        }
                     }
-                });
+                }
 
                 if (notify) this.notify(message);
 
