@@ -4,6 +4,8 @@ import { HotkeyManager } from './hotkeyManager.js';
 import { RubyTextHandler } from './rubyTextHandler.js';
 import { ChatAutocomplete } from './chatAutocomplete.js';
 import { ChatOptimizer } from './chatOptimizer.js';
+import { ChatNotification } from './chatNotification.js';
+import { ChatSelectorConfig } from './chatSelectorConfig.js'; 
 
 export class ChatSelector {
     static SETTINGS = {
@@ -30,12 +32,9 @@ export class ChatSelector {
     static originalProcessMessage = null;
 
     static initialize() {
-        console.log("ChatSelector | Initialize Started"); // DEBUG
         this.registerSettings();
 
         Hooks.once('ready', () => {
-            console.log("ChatSelector | Ready Hook Triggered"); // DEBUG
-
             if (ui.chat && !this.originalProcessMessage) {
                 console.log("ChatSelector | Saving ORIGINAL processMessage (Ready)");
                 this.originalProcessMessage = ui.chat.processMessage;
@@ -392,258 +391,112 @@ export class ChatSelector {
     }
 
     static registerSettings() {
-        game.settings.register('character-chat-selector', 'allowPersonalThemes', {
-            name: game.i18n.localize('CHATSELECTOR.Settings.AllowPersonalThemes.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.AllowPersonalThemes.Hint'),
-            scope: 'world',
-            config: true,
-            type: Boolean,
-            default: true
+        // 1. 유일하게 표시될 설정 메뉴 버튼
+        game.settings.registerMenu("character-chat-selector", "configMenu", {
+            name: "CHATSELECTOR.Config.Title",
+            label: "CHATSELECTOR.Config.Button",
+            hint: "CHATSELECTOR.Config.Hint",
+            icon: "fas fa-cogs",
+            type: ChatSelectorConfig,
+            restricted: false
         });
 
-        game.settings.register('character-chat-selector', this.SETTINGS.SHOW_SELECTOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.ShowSelector.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.ShowSelector.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: true,
-            onChange: (value) => {
+        // 2. 헬퍼 함수: 모든 설정을 config: false로 등록
+        const registerHidden = (key, type, def, scope = 'client', extra = {}) => {
+            game.settings.register('character-chat-selector', key, {
+                scope: scope,
+                config: false, // ★ 모든 항목 숨김 처리
+                type: type,
+                default: def,
+                ...extra
+            });
+        };
+
+        // --- General Settings ---
+        registerHidden('allowPersonalThemes', Boolean, true, 'world');
+        registerHidden(this.SETTINGS.SHOW_SELECTOR, Boolean, true, 'client', {
+            onChange: () => {
                 this.updateSelector();
                 this._updateSelectorVisibility();
             }
         });
-
-        game.settings.register('character-chat-selector', this.SETTINGS.SPEAK_AS_TOKEN, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.SpeakAsToken.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.SpeakAsToken.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: false,
+        registerHidden(this.SETTINGS.SPEAK_AS_TOKEN, Boolean, false, 'client', {
             onChange: () => {
                 const select = document.querySelector('.character-select');
                 if (select && select.value) {
-                    const event = { target: select };
-                    this._onCharacterSelect(event);
+                    this._onCharacterSelect({ target: select });
                 }
             }
         });
 
-        game.settings.register('character-chat-selector', this.SETTINGS.SHOW_PORTRAIT, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.ShowPortrait.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.ShowPortrait.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: true
-        });
-
+        // --- Portrait Appearance ---
         const syncFlags = () => this._syncUserFlags();
 
-        game.settings.register('character-chat-selector', this.SETTINGS.PORTRAIT_SIZE, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.PortraitSize.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.PortraitSize.Hint'),
-            scope: 'client',
-            config: true,
-            type: Number,
-            default: 36,
-            range: { min: 20, max: 100, step: 4 },
-            onChange: syncFlags
-        });
+        registerHidden(this.SETTINGS.SHOW_PORTRAIT, Boolean, true);
+        registerHidden(this.SETTINGS.PORTRAIT_SIZE, Number, 36, 'client', { onChange: syncFlags });
+        
+        // 초이스 타입도 String으로 등록하고 UI 처리는 Config 앱에서 담당
+        registerHidden(this.SETTINGS.PORTRAIT_BORDER, String, 'default', 'client', { onChange: syncFlags });
+        registerHidden(this.SETTINGS.USE_USER_COLOR, Boolean, true, 'client', { onChange: syncFlags });
+        registerHidden(this.SETTINGS.PORTRAIT_BORDER_COLOR, String, '#000000', 'client', { onChange: syncFlags });
+        
+        registerHidden(this.SETTINGS.USE_SECONDARY_COLOR, Boolean, false, 'client', { onChange: syncFlags });
+        registerHidden(this.SETTINGS.SECONDARY_COLOR, String, '#2b2a24', 'client', { onChange: syncFlags });
+        
+        registerHidden(this.SETTINGS.USE_GLOW_EFFECT, Boolean, false, 'client', { onChange: syncFlags });
+        registerHidden(this.SETTINGS.GLOW_COLOR, String, '#ffffff80', 'client', { onChange: syncFlags });
+        registerHidden(this.SETTINGS.GLOW_STRENGTH, Number, 5, 'client', { onChange: syncFlags });
 
-        game.settings.register('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Name'),
-            scope: 'client',
-            config: true,
-            type: String,
-            choices: {
-                'default': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.Default'),
-                'none': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.None'),
-                'square': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.Square'),
-                'circle': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.Circle'),
-                'minimalist': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.minimalist'),
-                'cyber': game.i18n.localize('CHATSELECTOR.Settings.PortraitBorder.Choices.cyber')
-            },
-            default: 'default',
-            onChange: syncFlags
-        });
+        // --- Chat Message Style ---
+        registerHidden(this.SETTINGS.USE_USER_BORDER, Boolean, true);
+        registerHidden(this.SETTINGS.CHAT_BORDER_COLOR, String, '#000000');
 
-        game.settings.register('character-chat-selector', this.SETTINGS.USE_USER_COLOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.UseUserColor.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.UseUserColor.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: true,
-            onChange: syncFlags
+        // --- System & Compatibility ---
+        registerHidden(this.SETTINGS.HIDE_DND5E_PORTRAIT, Boolean, false, 'client', {
+            onChange: () => this._updateChatStyles()
         });
+        registerHidden(this.SETTINGS.ALLOWED_MODULE_FLAGS, String, 'foundryvtt-simple-calendar,theatre', 'world');
 
-        game.settings.register('character-chat-selector', this.SETTINGS.PORTRAIT_BORDER_COLOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.PortraitBorderColor.Name'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#000000',
-            onChange: syncFlags
-        });
+        // --- Dropdown UI ---
+        const updateDropdown = () => this._updateDropdownStyles();
 
-        game.settings.register('character-chat-selector', this.SETTINGS.USE_SECONDARY_COLOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.UseSecondaryColor.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.UseSecondaryColor.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: false,
-            onChange: syncFlags
-        });
+        registerHidden('dropdownBackground', String, '#000000B3', 'client', { onChange: updateDropdown });
+        registerHidden('dropdownTextColor', String, '#f0f0f0', 'client', { onChange: updateDropdown });
+        registerHidden('dropdownBorderColor', String, '#7a7971', 'client', { onChange: updateDropdown });
+        registerHidden('dropdownHoverColor', String, '#FFFFFF1A', 'client', { onChange: updateDropdown });
+        registerHidden('enableThumbnailPreview', Boolean, true, 'client', { onChange: updateDropdown });
 
-        game.settings.register('character-chat-selector', this.SETTINGS.SECONDARY_COLOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.SecondaryColor.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.SecondaryColor.Hint'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#2b2a24',
-            onChange: syncFlags
-        });
+        // --- HP Tint ---
+        registerHidden('useHpTint', Boolean, false, 'client', { onChange: () => HpTintEffect._refreshAllTints() });
+        registerHidden('hpTintIntensity', Number, 0.6, 'client', { onChange: () => HpTintEffect._refreshAllTints() });
+        registerHidden('hpCurrentPath', String, 'system.attributes.hp.value', 'world', { onChange: () => HpTintEffect._refreshAllTints() });
+        registerHidden('hpMaxPath', String, 'system.attributes.hp.max', 'world', { onChange: () => HpTintEffect._refreshAllTints() });
 
-        game.settings.register('character-chat-selector', this.SETTINGS.USE_GLOW_EFFECT, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.UseGlowEffect.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.UseGlowEffect.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: false,
-            onChange: syncFlags
-        });
+        // --- Ruby Text ---
+        registerHidden('enableRuby', Boolean, true, 'client', { onChange: () => RubyTextHandler.injectStyles() });
+        registerHidden('rubyTextSize', Number, 0.5, 'client', { onChange: () => RubyTextHandler.injectStyles() });
+        registerHidden('rubyTextColor', String, '#666666', 'client', { onChange: () => RubyTextHandler.injectStyles() });
+        registerHidden('enableMarkdown', Boolean, true);
 
-        game.settings.register('character-chat-selector', this.SETTINGS.GLOW_COLOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.GlowColor.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.GlowColor.Hint'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#ffffff80',
-            onChange: syncFlags
-        });
+        // --- Chat Optimization ---
+        registerHidden('enableChatOptimization', Boolean, true, 'client', { requiresReload: true });
+        registerHidden('maxChatMessages', Number, 50, 'client', { onChange: () => ui.chat?.render(true) });
+        registerHidden('chatBatchSize', Number, 20);
 
-        game.settings.register('character-chat-selector', this.SETTINGS.GLOW_STRENGTH, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.GlowStrength.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.GlowStrength.Hint'),
-            scope: 'client',
-            config: true,
-            type: Number,
-            range: { min: 0, max: 20, step: 1 },
-            default: 5,
-            onChange: syncFlags
-        });
+        // --- Notification Sound ---
+        registerHidden('enableNotificationSound', Boolean, false);
+        registerHidden('playNotificationForSelf', Boolean, false);
+        registerHidden('notificationSoundPath', String, 'sounds/notify.wav');
+        registerHidden('notificationVolume', Number, 0.5);
 
-        game.settings.register('character-chat-selector', this.SETTINGS.USE_USER_BORDER, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.UseUserBorder.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.UseUserBorder.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: true
+        // --- Hotkeys ---
+        registerHidden('enableHotkeys', Boolean, false, 'client', {
+            onChange: value => { if (value) HotkeyManager.registerHotkeyBindings(); else HotkeyManager.unregisterHotkeyBindings(); }
         });
+        registerHidden('hotkeyModifier', String, 'Control');
 
-        game.settings.register('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.ChatBorderColor.Name'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#000000'
-        });
-
-        game.settings.register('character-chat-selector', this.SETTINGS.HIDE_DND5E_PORTRAIT, {
-            name: "Hide D&D5e Portrait",
-            hint: "Hides the default D&D5e chat portrait if enabled",
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: false,
-            onChange: () => {
-                this._updateChatStyles();
-            }
-        });
-
-        game.settings.register('character-chat-selector', this.SETTINGS.ALLOWED_MODULE_FLAGS, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.AllowedModuleFlags.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.AllowedModuleFlags.Hint'),
-            scope: 'world',
-            config: true,
-            type: String,
-            default: 'foundryvtt-simple-calendar,theatre',
-            onChange: () => {
-                ui.notifications.warn(game.i18n.localize('CHATSELECTOR.Settings.ReloadRequired'), { permanent: true });
-            }
-        });
-
-        game.settings.register('character-chat-selector', 'dropdownBackground', {
-            name: game.i18n.localize('CHATSELECTOR.Settings.DropdownBackground.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.DropdownBackground.Hint'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#000000B3'
-        });
-
-        game.settings.register('character-chat-selector', 'dropdownTextColor', {
-            name: game.i18n.localize('CHATSELECTOR.Settings.DropdownTextColor.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.DropdownTextColor.Hint'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#f0f0f0'
-        });
-
-        game.settings.register('character-chat-selector', 'dropdownBorderColor', {
-            name: game.i18n.localize('CHATSELECTOR.Settings.DropdownBorderColor.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.DropdownBorderColor.Hint'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#7a7971'
-        });
-
-        game.settings.register('character-chat-selector', 'dropdownHoverColor', {
-            name: game.i18n.localize('CHATSELECTOR.Settings.DropdownHoverColor.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.DropdownHoverColor.Hint'),
-            scope: 'client',
-            config: true,
-            type: String,
-            default: '#FFFFFF1A'
-        });
-
-        game.settings.register('character-chat-selector', 'enableThumbnailPreview', {
-            name: game.i18n.localize('CHATSELECTOR.Settings.EnableThumbnailPreview.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.EnableThumbnailPreview.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: true,
-            onChange: () => this._updateDropdownStyles()
-        });
-
-        game.settings.register('character-chat-selector', this.SETTINGS.FACTORY_RESET, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.FactoryReset.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.FactoryReset.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: false,
-            onChange: () => { }
-        });
-
-        Hooks.on('renderSettingsConfig', (app, html, data) => {
-            this._injectColorPickers(html);
-            this._injectResetButton(html);
-        });
-
-        Hooks.once('ready', () => {
-            this._syncUserFlags();
-        });
+        // --- Factory Reset ---
+        registerHidden(this.SETTINGS.FACTORY_RESET, Boolean, false);
     }
 
     static _updateSelectorVisibility(forceTabName = null, forceCollapsed = null) {
@@ -1228,10 +1081,24 @@ export class ChatSelector {
 
     static _applyCommonStyles(html, message, portraitContainer) {
         const useUserBorder = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_BORDER);
-        const chatBorderColor = useUserBorder ? (message.author?.color || message.user?.color || game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR)) : game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR);
+        
+        // 색상 결정
+        const chatBorderColor = useUserBorder 
+            ? (message.author?.color || message.user?.color || '#000000') 
+            : game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR);
 
+        // [수정] 직접 스타일 조작 대신 CSS 변수 주입 (V13 호환성)
         if (html.style) {
-            html.style.borderColor = chatBorderColor;
+            html.style.setProperty('--ccs-chat-border-color', chatBorderColor);
+            
+            // 혹시 CSS 파일이 로드되기 전이거나 우선순위 문제 대비 (직접 주입도 유지)
+            html.style.border = `1px solid ${chatBorderColor}`;
+        }
+        
+        // DOM 요소인 경우 (V13 renderChatMessageHTML 훅 대응)
+        if (html instanceof HTMLElement) {
+             html.style.setProperty('--ccs-chat-border-color', chatBorderColor);
+             html.style.borderColor = chatBorderColor; // Fallback
         }
 
         HpTintEffect.applyTintToPortrait(portraitContainer, message);
@@ -1337,7 +1204,7 @@ export class ChatSelector {
         return matrix[b.length][a.length];
     }
 
-    static _updateDropdownStyles() {
+    static _updateDropdownStyles(overrides = {}) {
         const styleId = 'character-selector-custom-styles';
         let styleElement = document.getElementById(styleId);
 
@@ -1347,11 +1214,14 @@ export class ChatSelector {
             document.head.appendChild(styleElement);
         }
 
-        const backgroundColor = game.settings.get('character-chat-selector', 'dropdownBackground');
-        const textColor = game.settings.get('character-chat-selector', 'dropdownTextColor');
-        const borderColor = game.settings.get('character-chat-selector', 'dropdownBorderColor');
-        const hoverColor = game.settings.get('character-chat-selector', 'dropdownHoverColor');
-        const enableThumbnail = game.settings.get('character-chat-selector', 'enableThumbnailPreview');
+        // 오버라이드 데이터가 있으면(설정창 미리보기) 그걸 쓰고, 없으면 저장된 설정값 사용
+        const getVal = (key) => overrides[key] ?? game.settings.get('character-chat-selector', key);
+
+        const backgroundColor = getVal('dropdownBackground');
+        const textColor = getVal('dropdownTextColor');
+        const borderColor = getVal('dropdownBorderColor');
+        const hoverColor = getVal('dropdownHoverColor');
+        const enableThumbnail = getVal('enableThumbnailPreview');
 
         styleElement.textContent = `
             .select-items {

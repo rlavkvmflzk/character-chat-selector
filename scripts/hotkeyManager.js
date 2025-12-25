@@ -3,8 +3,6 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 export class HotkeyManager {
     static initialize() {
         console.log('Character Chat Selector | Initializing HotkeyManager...');
-        
-        this.registerSettings();
 
         // 초기 실행 시 체크
         if (game.settings.get('character-chat-selector', 'enableHotkeys')) {
@@ -18,44 +16,6 @@ export class HotkeyManager {
                 this.unregisterHotkeyBindings();
             }
         });
-    }
-
-    static registerSettings() {
-        const MODULE_ID = 'character-chat-selector';
-
-        // 기능 활성화 여부는 클라이언트 설정(PC별 설정)으로 남겨두는 것이 일반적입니다.
-        game.settings.register(MODULE_ID, 'enableHotkeys', {
-            name: game.i18n.localize("CHATSELECTOR.Settings.EnableHotkeys.Name"),
-            hint: game.i18n.localize("CHATSELECTOR.Settings.EnableHotkeys.Hint"),
-            scope: "client",
-            config: true,
-            type: Boolean,
-            default: false,
-            onChange: value => {
-                if (value) this.registerHotkeyBindings();
-                else this.unregisterHotkeyBindings();
-            }
-        });
-
-        game.settings.register(MODULE_ID, 'hotkeyModifier', {
-            name: game.i18n.localize("CHATSELECTOR.Settings.HotkeyModifier.Name"),
-            hint: game.i18n.localize("CHATSELECTOR.Settings.HotkeyModifier.Hint"),
-            scope: "client",
-            config: true,
-            type: String,
-            choices: {
-                "Control": "Ctrl",
-                "Control+Shift": "Ctrl+Shift",
-                "Control+Alt": "Ctrl+Alt",
-                "Shift": "Shift"
-            },
-            default: "Control"
-        });
-
-        // [삭제됨] hotkeyBindings 설정 등록 코드를 제거합니다.
-        // 대신 아래 로직들에서 game.user.getFlag()를 사용합니다.
-        
-        console.log('Character Chat Selector | Hotkey settings registered.');
     }
 
     static registerHotkeyBindings() {

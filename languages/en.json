@@ -6,6 +6,7 @@
         "Save": "Save",
         "Cancel": "Cancel",
         "Settings": {
+            "Save": "Save",
             "AllowPersonalThemes": {
                 "Name": "Allow Personal Themes",
                 "Hint": "If enabled, player's custom portrait styles (borders, glow, etc.) will be visible to everyone. If disabled, your local settings will apply to all messages."
@@ -45,11 +46,11 @@
                 "Hint": "Uses the user's color as the border color."
             },
             "ChatBorderColor": {
-                "Name": "Chat Border Color(v12)"
+                "Name": "Chat Border Color"
             },
             "UseUserBorder": {
                 "Name": "Use User Color for Chat Border",
-                "Hint": "Uses the user's color as the border color of chat messages.(v12)"
+                "Hint": "Uses the user's color as the border color of chat messages."
             },
             "UseSecondaryColor": {
                 "Name": "Use Secondary Color",
@@ -157,6 +158,22 @@
             "BatchSize": {
                 "Name": "Scroll Loading Batch Size",
                 "Hint": "The number of past messages to load at once when scrolling up."
+            },
+            "EnableNotification": {
+                "Name": "Enable Chat Notification Sound",
+                "Hint": "Plays a sound when a new chat message is received."
+            },
+            "PlayNotificationForSelf": {
+                "Name": "Play for My Messages",
+                "Hint": "Whether to play the sound for messages sent by yourself."
+            },
+            "NotificationSound": {
+                "Name": "Notification Sound File",
+                "Hint": "Select the audio file to play."
+            },
+            "NotificationVolume": {
+                "Name": "Notification Volume",
+                "Hint": "Adjust the volume of the notification sound."
             }
         },
         "ConfigureHotkeys": "Configure Hotkeys",
@@ -175,6 +192,11 @@
             "CharacterChanged": "Actor changed to {name}.",
             "TempCharacterEnabled": "Now chatting as temporary character: {name}.",
             "TempCharacterDisabled": "Temporary character mode has been disabled."
+        },
+        "Config": {
+            "Title": "Character Chat Selector Configuration",
+            "Button": "Open Config Menu",
+            "Hint": "Open the main configuration menu to customize portraits, borders, and other settings."
         }
     }
 }

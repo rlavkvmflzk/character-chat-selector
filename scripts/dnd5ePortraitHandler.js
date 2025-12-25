@@ -5,24 +5,8 @@ export class Dnd5ePortraitHandler {
     };
 
     static initialize() {
-        this.registerSettings();
-        
         Hooks.once('ready', () => {
             this._updateChatStyles();
-        });
-    }
-
-    static registerSettings() {
-        game.settings.register(this.ID, this.SETTINGS.HIDE_DND5E_PORTRAIT, {
-            name: game.i18n.localize("CHATSELECTOR.Settings.HidePortrait.Name"),
-            hint: game.i18n.localize("CHATSELECTOR.Settings.HidePortrait.Hint"),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: false,
-            onChange: () => {
-                this._updateChatStyles();
-            }
         });
     }
 

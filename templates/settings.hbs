@@ -1,0 +1,286 @@
+<div class="ccs-settings-wrapper">
+    
+    <!-- 탭 네비게이션 -->
+    <nav class="ccs-tabs">
+        <a class="item active" data-action="tabSwitch" data-tab="general"><i class="fas fa-sliders-h"></i> General</a>
+        <a class="item" data-action="tabSwitch" data-tab="appearance"><i class="fas fa-palette"></i> Appearance</a>
+        <a class="item" data-action="tabSwitch" data-tab="chat"><i class="fas fa-comment-alt"></i> Chat & Text</a>
+        <a class="item" data-action="tabSwitch" data-tab="dropdown"><i class="fas fa-list"></i> Selector UI</a>
+        <a class="item" data-action="tabSwitch" data-tab="advanced"><i class="fas fa-microchip"></i> Advanced</a>
+    </nav>
+
+    <!-- 미리보기 패널 -->
+    <div class="ccs-preview-panel">
+        <h3>Live Preview</h3>
+        <div class="ccs-chat-preview">
+            <li class="message flexcol ccs-preview-message" style="border: 1px solid {{settings.chatBorderColor}}">
+                <div class="message-header flexrow">
+                    <!-- 포트레잇 미리보기 -->
+                    <div class="ccs-preview-portrait chat-portrait-container">
+                        <img src="{{previewImg}}" class="chat-portrait">
+                        <!-- HP Tint 레이어 -->
+                        <div class="hp-overlay ccs-preview-hp"></div>
+                    </div>
+                    <h4 class="message-sender">Character Name</h4>
+                    <span class="message-metadata">Flavor Text</span>
+                </div>
+                <div class="message-content">
+                    Test Message. <ruby>Kanji<rt>Furigana</rt></ruby>
+                </div>
+            </li>
+        </div>
+        <p class="notes" style="text-align: center;">Some changes may require saving to take full effect.</p>
+    </div>
+
+    <div class="ccs-content-area">
+        
+        <!-- ================== 1. GENERAL ================== -->
+        <div class="tab-content active" data-tab="general">
+            <h3>Core Functionality</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.ShowSelector.Name"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="showSelector" {{checked settings.showSelector}}>
+                </div>
+                <p class="notes">{{localize "CHATSELECTOR.Settings.ShowSelector.Hint"}}</p>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.SpeakAsToken.Name"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="speakAsToken" {{checked settings.speakAsToken}}>
+                </div>
+                <p class="notes">{{localize "CHATSELECTOR.Settings.SpeakAsToken.Hint"}}</p>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.EnableHotkeys.Name"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="enableHotkeys" {{checked settings.enableHotkeys}}>
+                </div>
+                <p class="notes">{{localize "CHATSELECTOR.Settings.EnableHotkeys.Hint"}}</p>
+            </div>
+
+            {{#if isGM}}
+            <hr>
+            <h3>World Settings (GM Only)</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.AllowPersonalThemes.Name"}} <i class="fas fa-globe"></i></label>
+                <div class="form-fields">
+                    <input type="checkbox" name="allowPersonalThemes" {{checked settings.allowPersonalThemes}}>
+                </div>
+                <p class="notes">{{localize "CHATSELECTOR.Settings.AllowPersonalThemes.Hint"}}</p>
+            </div>
+            
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.AllowedModuleFlags.Name"}} <i class="fas fa-globe"></i></label>
+                <div class="form-fields">
+                    <input type="text" name="allowedModuleFlags" value="{{settings.allowedModuleFlags}}">
+                </div>
+                <p class="notes">{{localize "CHATSELECTOR.Settings.AllowedModuleFlags.Hint"}}</p>
+            </div>
+            {{/if}}
+        </div>
+
+        <!-- ================== 2. APPEARANCE ================== -->
+        <div class="tab-content" data-tab="appearance">
+            <h3>Portrait Style</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.ShowPortrait.Name"}}</label>
+                <input type="checkbox" name="showPortrait" {{checked settings.showPortrait}}>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.PortraitSize.Name"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="portraitSize" min="20" max="100" step="2" value="{{settings.portraitSize}}">
+                    <span class="range-value">{{settings.portraitSize}}px</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.PortraitBorder.Name"}}</label>
+                <select name="portraitBorder">
+                    {{#each borderOptions as |label key|}}
+                    <option value="{{key}}" {{#if (eq ../settings.portraitBorder key)}}selected{{/if}}>{{localize label}}</option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <h3>Colors & Effects</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.UseUserColor.Name"}}</label>
+                <input type="checkbox" name="useUserColor" {{checked settings.useUserColor}}>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.PortraitBorderColor.Name"}}</label>
+                <div class="form-fields">
+                    <input type="color" name="portraitBorderColor" value="{{settings.portraitBorderColor}}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.UseSecondaryColor.Name"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="useSecondaryColor" {{checked settings.useSecondaryColor}}>
+                    <input type="color" name="secondaryColor" value="{{settings.secondaryColor}}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.UseGlowEffect.Name"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="useGlowEffect" {{checked settings.useGlowEffect}}>
+                    <input type="color" name="glowColor" value="{{settings.glowColor}}">
+                </div>
+            </div>
+             <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.GlowStrength.Name"}}</label>
+                <input type="range" name="glowStrength" min="0" max="20" value="{{settings.glowStrength}}">
+                <span class="range-value">{{settings.glowStrength}}</span>
+            </div>
+        </div>
+
+        <!-- ================== 3. CHAT & TEXT ================== -->
+        <div class="tab-content" data-tab="chat">
+            <h3>Chat Message</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.UseUserBorder.Name"}}</label>
+                <input type="checkbox" name="useUserBorder" {{checked settings.useUserBorder}}>
+            </div>
+            
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.ChatBorderColor.Name"}}</label>
+                <input type="color" name="chatBorderColor" value="{{settings.chatBorderColor}}">
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.HidePortrait.Name"}}</label>
+                <input type="checkbox" name="hideDnd5ePortrait" {{checked settings.hideDnd5ePortrait}}>
+                <p class="notes">{{localize "CHATSELECTOR.Settings.HidePortrait.Hint"}}</p>
+            </div>
+
+            <h3>Ruby Text (Furigana)</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.EnableRuby.Name"}}</label>
+                <input type="checkbox" name="enableRuby" {{checked settings.enableRuby}}>
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.RubySize.Name"}}</label>
+                <div class="form-fields">
+                    <input type="number" name="rubyTextSize" value="{{settings.rubyTextSize}}" step="0.1" style="width:60px;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.RubyColor.Name"}}</label>
+                <div class="form-fields">
+                    <input type="color" name="rubyTextColor" value="{{settings.rubyTextColor}}">
+                </div>
+            </div>
+        </div>
+
+        <!-- ================== 4. DROPDOWN UI ================== -->
+        <div class="tab-content" data-tab="dropdown">
+            <h3>Selector UI Customization</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.EnableThumbnailPreview.Name"}}</label>
+                <input type="checkbox" name="enableThumbnailPreview" {{checked settings.enableThumbnailPreview}}>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.DropdownBackground.Name"}}</label>
+                <input type="color" name="dropdownBackground" value="{{settings.dropdownBackground}}">
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.DropdownTextColor.Name"}}</label>
+                <input type="color" name="dropdownTextColor" value="{{settings.dropdownTextColor}}">
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.DropdownBorderColor.Name"}}</label>
+                <input type="color" name="dropdownBorderColor" value="{{settings.dropdownBorderColor}}">
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.DropdownHoverColor.Name"}}</label>
+                <input type="color" name="dropdownHoverColor" value="{{settings.dropdownHoverColor}}">
+            </div>
+        </div>
+
+        <!-- ================== 5. ADVANCED ================== -->
+        <div class="tab-content" data-tab="advanced">
+            <h3>Chat Optimization</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.EnableOptimization.Name"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="enableChatOptimization" {{checked settings.enableChatOptimization}}>
+                </div>
+                <p class="notes">{{localize "CHATSELECTOR.Settings.EnableOptimization.Hint"}}</p>
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.MaxMessages.Name"}}</label>
+                <input type="number" name="maxChatMessages" value="{{settings.maxChatMessages}}">
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.BatchSize.Name"}}</label>
+                <input type="number" name="chatBatchSize" value="{{settings.chatBatchSize}}">
+            </div>
+
+            <h3>Notification Sound</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.EnableNotification.Name"}}</label>
+                <input type="checkbox" name="enableNotificationSound" {{checked settings.enableNotificationSound}}>
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.PlayNotificationForSelf.Name"}}</label>
+                <input type="checkbox" name="playNotificationForSelf" {{checked settings.playNotificationForSelf}}>
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.NotificationSound.Name"}}</label>
+                <div class="form-fields">
+                    <file-picker name="notificationSoundPath" type="audio" value="{{settings.notificationSoundPath}}"></file-picker>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.NotificationVolume.Name"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="notificationVolume" min="0.1" max="1" step="0.1" value="{{settings.notificationVolume}}">
+                    <span class="range-value">{{settings.notificationVolume}}</span>
+                </div>
+            </div>
+
+            <h3>HP Tint (Red Overlay)</h3>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.UseHpTint.Name"}}</label>
+                <input type="checkbox" name="useHpTint" {{checked settings.useHpTint}}>
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.HpTintIntensity.Name"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="hpTintIntensity" min="0" max="1" step="0.1" value="{{settings.hpTintIntensity}}">
+                    <span class="range-value">{{settings.hpTintIntensity}}</span>
+                </div>
+            </div>
+            {{#if isGM}}
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.HpCurrentPath.Name"}} <i class="fas fa-globe"></i></label>
+                <input type="text" name="hpCurrentPath" value="{{settings.hpCurrentPath}}">
+            </div>
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.HpMaxPath.Name"}} <i class="fas fa-globe"></i></label>
+                <input type="text" name="hpMaxPath" value="{{settings.hpMaxPath}}">
+            </div>
+            {{/if}}
+        </div>
+
+    </div>
+
+    <!-- 푸터 -->
+    <footer class="sheet-footer">
+        <button type="button" data-action="reset" class="reset-btn">
+            <i class="fas fa-undo"></i> {{localize "CHATSELECTOR.Settings.FactoryReset.Name"}}
+        </button>
+        <button type="button" data-action="save" class="save-btn">
+            <i class="fas fa-save"></i> {{localize "CHATSELECTOR.Save"}}
+        </button>
+    </footer>
+</div>

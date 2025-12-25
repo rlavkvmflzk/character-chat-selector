@@ -6,9 +6,7 @@ export class HpTintEffect {
         HP_MAX_PATH: 'hpMaxPath'
     };
 
-    static initialize() {
-        this.registerSettings();
-        
+    static initialize() {        
         // 1. 액터(캐릭터 시트) 업데이트 감지
         Hooks.on('updateActor', (actor, changes, options, userId) => {
             if (this._hasHpChanged(changes)) {
@@ -21,49 +19,6 @@ export class HpTintEffect {
             if (changes.actorData || changes.bar1 || changes.bar2 || this._hasHpChanged(changes)) {
                 this._refreshTintsByToken(tokenDoc);
             }
-        });
-    }
-    
-    static registerSettings() {
-        game.settings.register('character-chat-selector', this.SETTINGS.USE_HP_TINT, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.UseHpTint.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.UseHpTint.Hint'),
-            scope: 'client',
-            config: true,
-            type: Boolean,
-            default: false,
-            onChange: () => this._refreshAllTints()
-        });
-    
-        game.settings.register('character-chat-selector', this.SETTINGS.HP_TINT_INTENSITY, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.HpTintIntensity.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.HpTintIntensity.Hint'),
-            scope: 'client',
-            config: true,
-            type: Number,
-            range: { min: 0, max: 1, step: 0.1 },
-            default: 0.6,
-            onChange: () => this._refreshAllTints()
-        });
-    
-        game.settings.register('character-chat-selector', this.SETTINGS.HP_CURRENT_PATH, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.HpCurrentPath.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.HpCurrentPath.Hint'),
-            scope: 'world',
-            config: true,
-            type: String,
-            default: this._getSystemDefaults().current,
-            onChange: () => this._refreshAllTints()
-        });
-    
-        game.settings.register('character-chat-selector', this.SETTINGS.HP_MAX_PATH, {
-            name: game.i18n.localize('CHATSELECTOR.Settings.HpMaxPath.Name'),
-            hint: game.i18n.localize('CHATSELECTOR.Settings.HpMaxPath.Hint'),
-            scope: 'world',
-            config: true,
-            type: String,
-            default: this._getSystemDefaults().max,
-            onChange: () => this._refreshAllTints()
         });
     }
 

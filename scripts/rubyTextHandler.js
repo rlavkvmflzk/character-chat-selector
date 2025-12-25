@@ -8,14 +8,13 @@ export class RubyTextHandler {
     };
 
     static initialize() {
-        this.registerSettings();
         this.injectStyles();
-        
+
         Hooks.on('renderSettingsConfig', (app, html, data) => {
             const root = (html instanceof HTMLElement) ? html : (html[0] || html);
             const inputName = 'character-chat-selector.rubyTextColor';
             const input = root.querySelector ? root.querySelector(`input[name="${inputName}"]`) : null;
-            
+
             if (input && input.nextElementSibling?.type !== 'color') {
                 const picker = document.createElement('input');
                 picker.type = 'color';
@@ -24,67 +23,26 @@ export class RubyTextHandler {
                 picker.style.width = '40px';
                 picker.style.border = 'none';
                 picker.style.cursor = 'pointer';
-                
+
                 if (input.value.startsWith('#')) picker.value = input.value.substring(0, 7);
-                
+
                 picker.addEventListener('input', (e) => {
                     input.value = e.target.value;
                     const event = new Event('change', { bubbles: true });
                     input.dispatchEvent(event);
                 });
-                
+
                 input.addEventListener('input', (e) => {
-                   if(e.target.value.length >= 7) picker.value = e.target.value.substring(0,7);
+                    if (e.target.value.length >= 7) picker.value = e.target.value.substring(0, 7);
                 });
-                
+
                 input.after(picker);
             }
         });
     }
 
-    static registerSettings() {
-        game.settings.register(this.ID, this.SETTINGS.ENABLE_MARKDOWN, {
-            name: "Enable Markdown",
-            hint: "Allows standard Markdown formatting (bold, italic, code, etc.) in chat.",
-            scope: "client",
-            config: true,
-            type: Boolean,
-            default: true
-        });
 
-        game.settings.register(this.ID, this.SETTINGS.ENABLE_RUBY, {
-            name: game.i18n.localize("CHATSELECTOR.Settings.EnableRuby.Name"),
-            hint: game.i18n.localize("CHATSELECTOR.Settings.EnableRuby.Hint"),
-            scope: "client",
-            config: true,
-            type: Boolean,
-            default: true,
-            onChange: () => this.injectStyles()
-        });
-    
-        game.settings.register(this.ID, this.SETTINGS.RUBY_SIZE, {
-            name: game.i18n.localize("CHATSELECTOR.Settings.RubySize.Name"),
-            hint: game.i18n.localize("CHATSELECTOR.Settings.RubySize.Hint"),
-            scope: "client",
-            config: true,
-            type: Number,
-            range: { min: 0.2, max: 1.5, step: 0.1 },
-            default: 0.5,
-            onChange: () => this.injectStyles()
-        });
-    
-        game.settings.register(this.ID, this.SETTINGS.RUBY_COLOR, {
-            name: game.i18n.localize("CHATSELECTOR.Settings.RubyColor.Name"),
-            hint: game.i18n.localize("CHATSELECTOR.Settings.RubyColor.Hint"),
-            scope: "client",
-            config: true,
-            type: String,
-            default: "#666666",
-            onChange: () => this.injectStyles()
-        });
-    }
-
-static processMessage(message) {
+    static processMessage(message) {
         if (!message || typeof message !== 'string') return message;
 
         // 1. 마크다운 처리
@@ -110,7 +68,7 @@ static processMessage(message) {
                     // [수정] 루비 태그가 정화 과정에서 잘리지 않도록 허용 목록 추가
                     message = DOMPurify.sanitize(parsed, {
                         ADD_TAGS: ['ruby', 'rt', 'rp', 'span'],
-                        ADD_ATTR: ['style', 'class'] 
+                        ADD_ATTR: ['style', 'class']
                     });
                 } else {
                     message = parsed;
@@ -123,16 +81,16 @@ static processMessage(message) {
         // 2. 루비 문자 처리
         if (game.settings.get(this.ID, this.SETTINGS.ENABLE_RUBY)) {
             const rubyPattern = /\[(.*?)\|(.*?)\]/g;
-            
+
             message = message.replace(rubyPattern, (match, original, ruby) => {
                 const kanjiLength = [...original].length;
                 const furiganaLength = [...ruby].length;
-                
+
                 if (furiganaLength > kanjiLength) {
-                    const extraSpace = (furiganaLength - kanjiLength) * 0.5; 
+                    const extraSpace = (furiganaLength - kanjiLength) * 0.5;
                     return `<span class="ruby-spacer" style="--ruby-space: ${extraSpace}em;"><ruby>${original}<rt>${ruby}</rt></ruby></span>`;
                 }
-                
+
                 return `<ruby>${original}<rt>${ruby}</rt></ruby>`;
             });
         }
@@ -163,7 +121,7 @@ static processMessage(message) {
 
         const style = document.createElement('style');
         style.id = styleId;
-        
+
         style.textContent = `
             ruby {
                 display: inline-flex;
@@ -200,7 +158,7 @@ static processMessage(message) {
                 filter: brightness(1.2); 
             }
         `;
-    
+
         document.head.appendChild(style);
     }
 }

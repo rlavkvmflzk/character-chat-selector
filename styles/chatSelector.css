@@ -452,6 +452,9 @@
     
     /* 회전 등 변형 유지 */
     transform-style: preserve-3d;
+    
+    /* [수정됨] 빛 번짐(Bloom)이 잘리지 않도록 설정 추가 */
+    overflow: visible !important;
 }
 
 /* 2. [공통] 에너지 빔 (Beam) - 레이어 1 */
@@ -479,7 +482,10 @@
 .chat-portrait-container.animated-glow::after {
     content: "";
     position: absolute;
-    inset: -3px; 
+    
+    /* [수정] 강도(Strength)에 따라 빛이 퍼지는 범위(크기)가 동적으로 변하도록 변경 */
+    /* 강도가 0이면 inset이 0이 되어 본체 뒤로 숨습니다. 강도가 커질수록 바깥으로 퍼집니다. */
+    inset: calc(var(--glow-strength) * -0.5);
     
     /* [수정] 빔보다 뒤 */
     z-index: -2; 
@@ -629,4 +635,225 @@
     object-fit: cover;
     background: #000;
     flex-shrink: 0;
+}
+
+/* Settings Window */
+.ccs-settings {
+    min-width: 750px;
+    min-height: 600px;
+    background: #1a1a1a;
+    color: #e0e0e0;
+}
+
+.ccs-settings .window-content {
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.ccs-settings-wrapper {
+    display: grid;
+    grid-template-columns: 200px 1fr; /* 좌측 탭, 우측 컨텐츠 */
+    grid-template-rows: auto 1fr auto;
+    height: 100%;
+    gap: 0;
+}
+
+/* Tabs */
+.ccs-tabs {
+    grid-row: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: #111;
+    border-right: 1px solid #333;
+    padding: 10px 0;
+}
+
+.ccs-tabs .item {
+    padding: 12px 15px;
+    background: transparent;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: all 0.2s;
+    text-align: left;
+    color: #888;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ccs-tabs .item i {
+    width: 20px;
+    text-align: center;
+}
+
+.ccs-tabs .item:hover {
+    background: rgba(255,255,255,0.05);
+    color: #ccc;
+}
+
+.ccs-tabs .item.active {
+    background: rgba(230, 28, 52, 0.1); 
+    color: #fff;
+    border-left-color: #e61c34; 
+}
+
+/* Preview Panel (Top Right) */
+.ccs-preview-panel {
+    grid-column: 2;
+    grid-row: 1;
+    background: #222;
+    padding: 15px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ccs-preview-panel h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: #aaa;
+    border: none;
+    font-family: "Teko", sans-serif;
+    text-transform: uppercase;
+}
+
+.ccs-chat-preview {
+    background: url('../../../ui/parchment.jpg') repeat; /* Foundry Default */
+    padding: 15px;
+    border-radius: 4px;
+    width: 90%;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.ccs-preview-message {
+    background: #e9e8e4;
+    padding: 5px;
+    border: 1px solid #000;
+    border-radius: 5px;
+    position: relative;
+    list-style: none;
+    margin: 0;
+    color: #000;
+}
+
+.ccs-preview-message .message-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 3px;
+    gap: 5px;
+}
+
+/* Content Area */
+.ccs-content-area {
+    grid-column: 2;
+    grid-row: 2;
+    overflow-y: auto;
+    padding: 20px;
+    background: #1a1a1a;
+}
+
+.ccs-content-area h3 {
+    border-bottom: 2px solid #333;
+    margin-top: 20px;
+    margin-bottom: 15px;
+    font-family: 'Teko', sans-serif;
+    font-size: 1.4em;
+    color: #e61c34;
+}
+.ccs-content-area h3:first-child { margin-top: 0; }
+
+/* Form Groups */
+.ccs-settings .form-group {
+    background: rgba(255,255,255,0.03);
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 1px solid transparent;
+}
+
+.ccs-settings .form-group:hover {
+    border-color: #444;
+}
+
+.ccs-settings .form-group label {
+    flex: 1;
+    font-weight: bold;
+    color: #ccc;
+}
+
+.ccs-settings .notes {
+    flex-basis: 100%;
+    font-size: 0.85em;
+    color: #888;
+    margin-top: 4px;
+}
+
+.ccs-settings input[type="text"],
+.ccs-settings input[type="number"],
+.ccs-settings select {
+    background: #111;
+    color: #fff;
+    border: 1px solid #444;
+    height: 26px;
+}
+
+/* Footer */
+.ccs-settings .sheet-footer {
+    grid-column: 2;
+    grid-row: 3;
+    padding: 15px;
+    background: #111;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+}
+
+.ccs-settings .save-btn {
+    background: #e61c34;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    font-family: 'Teko';
+    font-size: 1.2em;
+    cursor: pointer;
+}
+.ccs-settings .save-btn:hover { background: #ff2d49; }
+
+.ccs-settings .reset-btn {
+    background: transparent;
+    color: #666;
+    border: 1px solid #444;
+}
+.ccs-settings .reset-btn:hover { color: #ccc; border-color: #666; }
+
+/* HP Overlay Preview */
+.hp-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    border-radius: inherit;
+    z-index: 20;
+}
+
+.message, .chat-message { /* .chat-message 추가 */
+    position: relative;
+    
+    /* [수정] V13에서는 기본 보더가 없을 수 있으므로 명시적으로 선언 */
+    border-style: solid !important;
+    border-width: 1px !important;
+    
+    /* JS에서 주입하는 CSS 변수를 사용하도록 변경 */
+    border-color: var(--ccs-chat-border-color, #000) !important;
+    
+    /* V13의 기본 box-shadow가 테두리를 가릴 수 있으므로 조정 (선택사항) */
+    /* box-shadow: none; */ 
 }

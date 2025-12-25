@@ -3,15 +3,18 @@ import { HotkeyManager } from './hotkeyManager.js';
 import { ChatEditor } from './chatEditor.js'; 
 import { ChatAutocomplete } from './chatAutocomplete.js';
 import { ChatOptimizer } from './chatOptimizer.js';
-
+import { ChatNotification } from './chatNotification.js'; 
+import { ChatSelectorConfig } from './chatSelectorConfig.js'; 
 
 Hooks.once('init', () => {
-    console.log('Character Chat Selector: Initializing...');
+    console.log('Characer Chat Selector: Initializing...');
     ChatSelector.initialize();
     HotkeyManager.initialize();
     ChatEditor.initialize(); 
     ChatAutocomplete.initialize();
     ChatOptimizer.initialize();    
+    ChatNotification.initialize();
+    ChatSelectorConfig.initialize();
 });
 
 // 채팅 메시지 생성 전에 추가 처리
@@ -20,7 +23,7 @@ Hooks.on('preCreateChatMessage', (message, options, userId) => {
     if (select && select.value) {
         const actor = game.actors.get(select.value);
         if (actor) {
-            // [수정] chatSelector.js가 이미 올바른 토큰을 설정했다면(액터 ID가 같고 토큰 ID가 존재하면) 덮어쓰지 않고 유지합니다.
+            // chatSelector.js가 이미 올바른 토큰을 설정했다면(액터 ID가 같고 토큰 ID가 존재하면) 덮어쓰지 않고 유지합니다.
             if (message.speaker.actor === actor.id && message.speaker.token) {
                 return true;
             }
