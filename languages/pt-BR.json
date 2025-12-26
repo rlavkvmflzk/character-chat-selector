@@ -6,6 +6,7 @@
         "Save": "Salvar",
         "Cancel": "Cancelar",
         "Settings": {
+            "Save": "Salvar",
             "AllowPersonalThemes": {
                 "Name": "Permitir Temas Pessoais",
                 "Hint": "Se ativado, a personalização do retrato do jogador (bordas, brilho, etc.) ficará visível para todos. Se desativado, suas configurações locais serão aplicadas a todas as mensagens."
@@ -45,11 +46,11 @@
                 "Hint": "Usa a cor do usuário como cor da borda da imagem no chat."
             },
             "ChatBorderColor": {
-                "Name": "Cor da Borda da Imagem (v12)"
+                "Name": "Cor da Borda da Imagem"
             },
             "UseUserBorder": {
                 "Name": "Usar Cor do Usuário na Borda do Chat",
-                "Hint": "Usa a cor do usuário como cor da borda das mensagens de chat. (v12)"
+                "Hint": "Usa a cor do usuário como cor da borda das mensagens de chat."
             },
             "UseSecondaryColor": {
                 "Name": "Usar Cor Secundária",
@@ -157,6 +158,22 @@
             "BatchSize": {
                 "Name": "Tamanho do Lote de Carregamento",
                 "Hint": "O número de mensagens passadas a serem carregadas de uma vez ao rolar para cima."
+            },
+            "EnableNotification": {
+                "Name": "Ativar Som de Notificação do Chat",
+                "Hint": "Reproduz um som quando uma nova mensagem de chat é recebida."
+            },
+            "PlayNotificationForSelf": {
+                "Name": "Tocar para Minhas Mensagens",
+                "Hint": "Se deseja reproduzir o som para mensagens enviadas por você mesmo."
+            },
+            "NotificationSound": {
+                "Name": "Arquivo de Som da Notificação",
+                "Hint": "Selecione o arquivo de áudio que deseja reproduzir."
+            },
+            "NotificationVolume": {
+                "Name": "Volume da Notificação",
+                "Hint": "Ajuste o volume do som da notificação."
             }
         },
         "ConfigureHotkeys": "Configurar Atalhos",
@@ -175,6 +192,11 @@
             "CharacterChanged": "Ator mudou para {name}.",
             "TempCharacterEnabled": "Conversando como personagem temporário: {name}.",
             "TempCharacterDisabled": "O modo de personagem temporário foi desativado."
+        },
+        "Config": {
+            "Title": "Configuração do Character Chat Selector",
+            "Button": "Abrir Menu de Configuração",
+            "Hint": "Abra o menu de configuração principal para personalizar retratos, bordas e outras configurações."
         }
     }
 }
