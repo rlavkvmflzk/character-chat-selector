@@ -41,3 +41,4 @@ Character Chat Selector enhances Foundry VTT's interface by providing a convenie
 
 ## Credits & Licenses
 - Chat optimization features are inspired by the logic of the [Less Chat](https://github.com/xyzzy42/less-chat) module, rewritten for compatibility with Character Chat Selector.
+- Kharmans: PT-BR (Portuguese - Brazil) localization.
