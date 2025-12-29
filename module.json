@@ -2,7 +2,7 @@
     "id": "character-chat-selector",
     "title": "Character Chat Selector",
     "description": "Provides a tokenless selector for Actors in your scene to chat with, as well as chat message customization.",
-    "version": "3.4.0",
+    "version": "3.4.1",
     "compatibility": {
         "minimum": "13",
         "verified": "13",

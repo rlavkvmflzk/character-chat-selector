@@ -844,16 +844,17 @@
     z-index: 20;
 }
 
-.message, .chat-message { /* .chat-message 추가 */
+/* 우리 모듈의 처리를 거친 메시지에만 스타일 적용 */
+.message.ccs-custom-border, 
+.chat-message.ccs-custom-border {
     position: relative;
-    
-    /* [수정] V13에서는 기본 보더가 없을 수 있으므로 명시적으로 선언 */
     border-style: solid !important;
     border-width: 1px !important;
-    
-    /* JS에서 주입하는 CSS 변수를 사용하도록 변경 */
     border-color: var(--ccs-chat-border-color, #000) !important;
-    
-    /* V13의 기본 box-shadow가 테두리를 가릴 수 있으므로 조정 (선택사항) */
-    /* box-shadow: none; */ 
+}
+
+/* (선택사항) 다른 모듈의 버튼이나 내부 요소가 깨지는 걸 방지하기 위해 
+   메시지 내부의 모든 div까지 보더가 생기지 않도록 확실히 차단 */
+.ccs-custom-border div {
+    border-color: inherit; 
 }

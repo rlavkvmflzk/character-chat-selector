@@ -225,10 +225,8 @@ export class ChatSelectorConfig extends HandlebarsApplicationMixin(ApplicationV2
         event.preventDefault();
         const formData = new FormDataExtended(this.element).object;
 
-        // 설정을 하나씩 저장
+        // 1. 설정값 저장 (onChange 훅들이 자동으로 트리거됨)
         for (const [key, value] of Object.entries(formData)) {
-            // World 스코프 설정은 GM만 저장 가능
-            // (registerSettings에서 scope를 지정했으므로 set 호출 시 자동 처리되지만 안전을 위해)
             try {
                 await game.settings.set('character-chat-selector', key, value);
             } catch (e) {
@@ -236,14 +234,17 @@ export class ChatSelectorConfig extends HandlebarsApplicationMixin(ApplicationV2
             }
         }
 
-        // 테마 플래그 동기화 (기존 로직 유지)
+        // 2. 테마 플래그 동기화
         await this._syncUserFlags(formData);
+
+        // [수정] ui.chat.render(true) 대신 아래 메서드들 호출
+        // 이미 렌더링된 메시지들의 스타일만 즉시 갱신
+        ChatSelector.updateExistingMessages(); 
+        // 선택기 UI 갱신
+        ChatSelector.refreshSelector(); 
 
         this.close();
         ui.notifications.info(game.i18n.localize("CHATSELECTOR.Save") + " " + game.i18n.localize("CHATSELECTOR.Settings.Saved"));
-        
-        // 화면 갱신
-        if(ui.chat) ui.chat.render(true);
     }
 
     async _syncUserFlags(data) {

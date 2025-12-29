@@ -222,7 +222,7 @@ export class ChatSelector {
                         speaker: speaker,
                         content: `${speaker.alias} ${RubyTextHandler.processMessage(emoteText)}`,
                         style: CHAT_STYLES.EMOTE
-                    }, { chatBubble: true }); // <--- 여기 추가
+                    }, { chatBubble: true }); 
                 }
             }
 
@@ -287,7 +287,7 @@ export class ChatSelector {
                     speaker: speaker,
                     content: processedMessage,
                     style: CHAT_STYLES.IC
-                }, { chatBubble: true }); // <--- 여기 추가!
+                }, { chatBubble: true }); 
             }
 
             // [Actor 모드]
@@ -312,7 +312,7 @@ export class ChatSelector {
 
             const activeToken = getActiveToken();
 
-            // [수정] speaker 객체 구성
+            //  speaker 객체 구성
             const speaker = {
                 scene: game.scenes.current?.id,
                 actor: actor.id,
@@ -365,7 +365,6 @@ export class ChatSelector {
                 const emoteText = message.slice(cmdLength);
                 const processedEmoteText = RubyTextHandler.processMessage(emoteText);
 
-                // [수정] 감정표현(Emote)에도 말풍선 옵션 추가
                 return ChatMessage.create({
                     user: game.user.id,
                     speaker: speaker,
@@ -380,7 +379,6 @@ export class ChatSelector {
 
             const processedMessage = RubyTextHandler.processMessage(message);
 
-            // [수정] 일반 대화(IC)에 말풍선 옵션 추가 (가장 중요)
             return ChatMessage.create({
                 user: game.user.id,
                 speaker: speaker,
@@ -405,7 +403,7 @@ export class ChatSelector {
         const registerHidden = (key, type, def, scope = 'client', extra = {}) => {
             game.settings.register('character-chat-selector', key, {
                 scope: scope,
-                config: false, // ★ 모든 항목 숨김 처리
+                config: false, 
                 type: type,
                 default: def,
                 ...extra
@@ -416,7 +414,7 @@ export class ChatSelector {
         registerHidden('allowPersonalThemes', Boolean, true, 'world');
         registerHidden(this.SETTINGS.SHOW_SELECTOR, Boolean, true, 'client', {
             onChange: () => {
-                this.updateSelector();
+                this.refreshSelector(); 
                 this._updateSelectorVisibility();
             }
         });
@@ -526,7 +524,7 @@ export class ChatSelector {
             }
         }
 
-        // [추가된 부분] 탭 정보를 여전히 찾을 수 없다면(초기 로딩/애니메이션 중) 'chat'으로 간주
+        // 탭 정보를 여전히 찾을 수 없다면(초기 로딩/애니메이션 중) 'chat'으로 간주
         if (!activeTab) {
             activeTab = 'chat';
         }
@@ -806,7 +804,7 @@ export class ChatSelector {
                     const text = item.querySelector('span').textContent;
                     selected.textContent = text;
                     itemsDiv.classList.remove('show');
-                    // [수정] 통합 메서드 사용
+                    //  통합 메서드 사용
                     this.selectActor(value);
                 });
             });
@@ -826,7 +824,7 @@ export class ChatSelector {
         });
     }
 
-    // [추가] 안전한 목록 새로고침 메서드
+    //  안전한 목록 새로고침 메서드
     static refreshSelector() {
         // 1. 현재 선택된 값 저장
         const select = document.querySelector('.character-select');
@@ -842,7 +840,7 @@ export class ChatSelector {
         // 4. UI 재생성 (저장해둔 값으로 복구)
         this._createSelector(currentId);
 
-        // [추가] 생성 직후 현재 탭이나 사이드바 상태에 맞춰 보임/숨김 갱신 (이게 핵심!)
+        //  생성 직후 현재 탭이나 사이드바 상태에 맞춰 보임/숨김 갱신 (이게 핵심!)
         this._updateSelectorVisibility();
     }
 
@@ -955,6 +953,8 @@ export class ChatSelector {
 
         const injectPortrait = () => {
             if (header.querySelector('.chat-portrait-container')) return;
+            
+            messageElement.classList.add('ccs-custom-border'); 
 
             const existingAvatar = header.querySelector('a.avatar');
             const senderEl = header.querySelector('.message-sender');
@@ -1082,17 +1082,16 @@ export class ChatSelector {
     static _applyCommonStyles(html, message, portraitContainer) {
         const useUserBorder = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_BORDER);
         
-        // 색상 결정
+        //  DOM 요소에 클래스 부여 (확실하게)
+        const messageElement = (html instanceof HTMLElement) ? html : (html[0] || html);
+        if (messageElement) messageElement.classList.add('ccs-custom-border');
+
         const chatBorderColor = useUserBorder 
             ? (message.author?.color || message.user?.color || '#000000') 
             : game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR);
 
-        // [수정] 직접 스타일 조작 대신 CSS 변수 주입 (V13 호환성)
         if (html.style) {
             html.style.setProperty('--ccs-chat-border-color', chatBorderColor);
-            
-            // 혹시 CSS 파일이 로드되기 전이거나 우선순위 문제 대비 (직접 주입도 유지)
-            html.style.border = `1px solid ${chatBorderColor}`;
         }
         
         // DOM 요소인 경우 (V13 renderChatMessageHTML 훅 대응)
@@ -1248,5 +1247,25 @@ export class ChatSelector {
                 display: ${enableThumbnail ? 'none' : 'none !important'};
             }
         `;
+    }
+
+    static updateExistingMessages() {
+        const messages = document.querySelectorAll('.message.ccs-custom-border, .chat-message.ccs-custom-border');
+        messages.forEach(html => {
+            const messageId = html.dataset.messageId || html.dataset.documentId;
+            const message = game.messages.get(messageId);
+            if (!message) return;
+
+            // 1. 테두리 색상 갱신
+            this._applyCommonStyles(html, message, html.querySelector('.chat-portrait-container'));
+            
+            // 2. 초상화 스타일 갱신 (이미 있는 경우)
+            const portraitContainer = html.querySelector('.chat-portrait-container');
+            if (portraitContainer) {
+                const imgSrc = this._getMessageImage(message);
+                const newPortrait = this._createPortraitElement(message, imgSrc);
+                portraitContainer.replaceWith(newPortrait);
+            }
+        });
     }
 }

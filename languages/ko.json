@@ -176,6 +176,33 @@
                     "Name": "알림음 볼륨",
                     "Hint": "알림 소리의 크기를 조절합니다."
                 }
+            },
+            "Saved": "설정이 저장되었습니다.",
+            "Tabs": {
+                "General": "일반",
+                "Appearance": "외형",
+                "Chat": "채팅 & 텍스트",
+                "UI": "선택기 UI",
+                "Advanced": "고급"
+            },
+            "Headers": {
+                "Core": "핵심 기능",
+                "World": "월드 설정 (GM 전용)",
+                "Portrait": "초상화 스타일",
+                "Colors": "색상 및 효과",
+                "ChatMessage": "채팅 메시지",
+                "Ruby": "루비 문자 (후리가나)",
+                "UI": "선택기 UI 커스텀",
+                "Optimization": "채팅 최적화",
+                "Notification": "알림 사운드",
+                "HpTint": "HP 상태 표시 (붉은 오버레이)"
+            },
+            "Preview": {
+                "Title": "실시간 미리보기",
+                "Note": "일부 변경 사항은 저장 후 완전히 적용될 수 있습니다.",
+                "Name": "캐릭터 이름",
+                "Flavor": "플레이버 텍스트",
+                "Content": "테스트 메시지입니다."
             }
         },
         "ConfigureHotkeys": "단축키 설정",
