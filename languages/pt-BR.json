@@ -174,6 +174,33 @@
             "NotificationVolume": {
                 "Name": "Volume da Notificação",
                 "Hint": "Ajuste o volume do som da notificação."
+            },
+            "Saved": "Configurações salvas com sucesso.",
+            "Tabs": {
+                "General": "Geral",
+                "Appearance": "Aparência",
+                "Chat": "Chat & Texto",
+                "UI": "Interface do Seletor",
+                "Advanced": "Avançado"
+            },
+            "Headers": {
+                "Core": "Funcionalidade Principal",
+                "World": "Configurações do Mundo (Apenas Mestre)",
+                "Portrait": "Estilo do Retrato",
+                "Colors": "Cores & Efeitos",
+                "ChatMessage": "Mensagem de Chat",
+                "Ruby": "Texto Ruby (Furigana)",
+                "UI": "Personalização da Interface do Seletor",
+                "Optimization": "Otimização de Chat",
+                "Notification": "Som de Notificação",
+                "HpTint": "Tonalidade do PV (Sobreposição Vermelha)"
+            },
+            "Preview": {
+                "Title": "Visualização ao Vivo",
+                "Note": "Algumas alterações podem exigir que você salve o arquivo para que entrem em vigor completamente.",
+                "Name": "Nome do Personagem",
+                "Flavor": "Texto Descritivo",
+                "Content": "Mensagem de Teste."
             }
         },
         "ConfigureHotkeys": "Configurar Atalhos",
@@ -200,3 +227,4 @@
         }
     }
 }
+
