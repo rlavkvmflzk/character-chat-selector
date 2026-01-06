@@ -201,6 +201,10 @@
                 "Name": "Nome do Personagem",
                 "Flavor": "Texto Descritivo",
                 "Content": "Mensagem de Teste."
+            },
+            "HideWfrp4ePortrait": {
+                "Name": "Ocultar Retratos WFRP4e",
+                "Hint": "Quando ativado, esconde o retrato padrão do chat do WFRP4e. Isso ajuda a evitar retratos duplicados ao usar o módulo Chat Selector."
             }
         },
         "ConfigureHotkeys": "Configurar Atalhos",
@@ -227,4 +231,5 @@
         }
     }
 }
+
 
