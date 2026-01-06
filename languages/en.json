@@ -201,6 +201,10 @@
                 "Name": "Character Name",
                 "Flavor": "Flavor Text",
                 "Content": "Test Message."
+            },
+            "HideWfrp4ePortrait": {
+                "Name": "Hide WFRP4e Portrait",
+                "Hint": "Hides the default WFRP4e chat portrait when enabled. This helps avoid duplicate portraits when using the Chat Selector module."
             }
         },
         "ConfigureHotkeys": "Configure Hotkeys",

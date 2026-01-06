@@ -3,8 +3,8 @@
 }
 
 .character-chat-selector {
-    flex-basis: 100%; /* 이 줄을 추가하여 너비를 100%로 설정 */
-    order: 99; /* 이 줄을 추가하여 다른 요소들보다 아래에 위치하도록 설정 */
+    flex-basis: 100%; 
+    order: 99; 
     position: relative;
     display: flex;
     gap: 5px;
@@ -154,7 +154,7 @@
 
 /* 기본 스타일 */
 .portrait-default {
-    border: 1px solid var(--primary-color);
+    border: 1px solid var(--primary-color) !important;
     border-radius: 15%;
     box-shadow: 0 0 var(--glow-strength) var(--glow-color);
 }
@@ -162,13 +162,13 @@
 /* 사각형 스타일 */
 .portrait-square {
     position: relative;
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--primary-color) !important;
     box-shadow: 0 0 var(--glow-strength) var(--glow-color);
 }
 
 /* 테두리 없음 */
 .portrait-none {
-    border: none;
+    border: none !important;
     box-shadow: none;
 }
 
@@ -190,7 +190,7 @@
 /* 원형 스타일 */
 .portrait-circle {
     position: relative;
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--primary-color) !important;
     border-radius: 50%;
     box-shadow: 0 0 var(--glow-strength) var(--glow-color);
     overflow: hidden;
@@ -214,24 +214,19 @@
 
 /* 미니멀리스트 스타일 */
 .portrait-minimalist {
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--primary-color) !important;
     background: white;
     box-shadow: 5px 5px 0 var(--secondary-color);
     transform: rotate(-2deg);
 }
 
-/* 사이버펑크 스타일 (수정됨) */
+/* 사이버펑크 스타일 */
 .portrait-cyber {
     position: relative;
-    /* [핵심 1] border 대신 padding과 background로 테두리를 만듭니다 */
     border: none !important;
-    padding: 3px; /* 이게 테두리 두께가 됩니다 */
-    background: var(--primary-color); /* 이게 테두리 색상이 됩니다 */
-    
-    /* [핵심 2] 모양 깎기 (8각형) */
+    padding: 3px; 
+    background: var(--primary-color);
     clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
-    
-    /* [핵심 3] 잘린 모양에 그림자를 주려면 box-shadow 대신 filter를 써야 합니다 */
     box-shadow: none !important;
     filter: drop-shadow(0 0 var(--glow-strength) var(--glow-color));
 }
@@ -243,27 +238,21 @@
     height: 100%;
     object-fit: cover;
     background: #000;
-    
-    /* 이미지도 부모와 똑같이 깎아줘야 깔끔하게 나옵니다 */
     clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
 }
 
-/* 사이버펑크 스타일의 오버레이 효과 (선택사항) */
+/* 사이버펑크 스타일의 오버레이 효과 */
 .portrait-cyber::after {
     content: '';
     position: absolute;
-    /* 테두리(padding) 안쪽으로 오버레이가 들어가도록 조정 */
     inset: 3px; 
-    
     background: linear-gradient(135deg, 
         transparent 40%,
         var(--primary-color) 50%, 
         transparent 60%
     );
-    opacity: 0.2; /* 은은한 반사광 */
+    opacity: 0.2; 
     pointer-events: none;
-    
-    /* 오버레이도 깎아줍니다 */
     clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%);
 }
 
@@ -418,7 +407,7 @@
     pointer-events: none; /* 아이콘 클릭 방지 */
 }
 
-/* 다크 모드 대응 (필요한 경우) */
+/* 다크 모드 대응 */
 :root[data-theme="dark"] .hotkey-config .search-input {
     background: rgba(255, 255, 255, 0.1);
     color: #f0f0f0;
@@ -440,20 +429,11 @@
 /* 1. [공통] 컨테이너 */
 .chat-portrait-container.animated-glow {
     position: relative;
-    /* 기존 border 제거 */
     border: none !important; 
-    
-    /* 패딩 = 빔 두께 */
     padding: 3px;
-    
-    /* z-index 문맥 생성 (중요) */
     z-index: 0;
     isolation: isolate;
-    
-    /* 회전 등 변형 유지 */
     transform-style: preserve-3d;
-    
-    /* [수정됨] 빛 번짐(Bloom)이 잘리지 않도록 설정 추가 */
     overflow: visible !important;
 }
 
@@ -462,10 +442,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    
-    /* [수정] 마이너스 대신 양수 사용. 이미지보다 밑에, 배경보다 위에. */
     z-index: -1; 
-    
     border-radius: inherit; 
     background: conic-gradient(
         from var(--gradient-angle),
@@ -482,14 +459,8 @@
 .chat-portrait-container.animated-glow::after {
     content: "";
     position: absolute;
-    
-    /* [수정] 강도(Strength)에 따라 빛이 퍼지는 범위(크기)가 동적으로 변하도록 변경 */
-    /* 강도가 0이면 inset이 0이 되어 본체 뒤로 숨습니다. 강도가 커질수록 바깥으로 퍼집니다. */
     inset: calc(var(--glow-strength) * -0.5);
-    
-    /* [수정] 빔보다 뒤 */
     z-index: -2; 
-    
     border-radius: inherit; 
     background: conic-gradient(
         from var(--gradient-angle),
@@ -511,11 +482,7 @@
     height: 100%;
     object-fit: cover;
     border-radius: inherit;
-    
-    /* [수정] 빔보다 무조건 위에 오도록 설정 */
     z-index: 10; 
-    
-    /* 투명한 부분이 있으면 빔이 비치므로 배경색 지정 */
     background: #222; 
 }
 
@@ -580,7 +547,7 @@
     margin: 0 !important;
 }
 
-/* (혹시 채팅창을 팝아웃으로 따로 뺐을 때도 적용되게 하려면 이것도 추가) */
+/* 채팅창을 팝아웃으로 따로 뺐을 때도 적용되게 */
 #chat-popout .polyglot.polyglot-lang-select {
     margin: 0 !important;
 }
@@ -589,22 +556,15 @@
 
 /* 자동완성 팝업 스타일 - Body 부착용 */
 .autocomplete-list {
-    /* position: fixed;  <-- JS에서 동적으로 좌표와 함께 할당함 */
-    /* bottom, left 등도 JS가 제어함 */
-    
     max-height: 250px;
-    
     background: #1e1e1e;
     border: 1px solid #444;
     border-radius: 4px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.8); /* 그림자 진하게 */
-    
+    box-shadow: 0 0 15px rgba(0,0,0,0.8); 
     z-index: 100;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    
-    /* 폰트 가독성 */
     font-family: var(--font-primary);
 }
 
@@ -844,7 +804,7 @@
     z-index: 20;
 }
 
-/* 우리 모듈의 처리를 거친 메시지에만 스타일 적용 */
+/* 모듈의 처리를 거친 메시지에만 스타일 적용 */
 .message.ccs-custom-border, 
 .chat-message.ccs-custom-border {
     position: relative;
@@ -853,7 +813,7 @@
     border-color: var(--ccs-chat-border-color, #000) !important;
 }
 
-/* (선택사항) 다른 모듈의 버튼이나 내부 요소가 깨지는 걸 방지하기 위해 
+/* 다른 모듈의 버튼이나 내부 요소가 깨지는 걸 방지하기 위해 
    메시지 내부의 모든 div까지 보더가 생기지 않도록 확실히 차단 */
 .ccs-custom-border div {
     border-color: inherit; 

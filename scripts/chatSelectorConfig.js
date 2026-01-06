@@ -37,7 +37,7 @@ export class ChatSelectorConfig extends HandlebarsApplicationMixin(ApplicationV2
             'useSecondaryColor', 'secondaryColor',
             'useGlowEffect', 'glowColor', 'glowStrength',
             'useHpTint', 'hpTintIntensity', 'hpCurrentPath', 'hpMaxPath',
-            'hideDnd5ePortrait', 'allowedModuleFlags', // World
+            'hideDnd5ePortrait', 'hideWfrp4ePortrait', 'allowedModuleFlags', // World
             'dropdownBackground', 'dropdownTextColor', 'dropdownBorderColor', 'dropdownHoverColor', 'enableThumbnailPreview',
             'enableRuby', 'rubyTextSize', 'rubyTextColor',
             'enableChatOptimization', 'maxChatMessages', 'chatBatchSize',
@@ -68,7 +68,8 @@ export class ChatSelectorConfig extends HandlebarsApplicationMixin(ApplicationV2
             borderOptions,
             userColor: game.user.color,
             isGM: game.user.isGM,
-            previewImg: game.user.avatar || "icons/svg/mystery-man.svg"
+            previewImg: game.user.avatar || "icons/svg/mystery-man.svg",
+            systemId: game.system.id  
         };
     }
 

@@ -6,6 +6,7 @@ import { ChatAutocomplete } from './chatAutocomplete.js';
 import { ChatOptimizer } from './chatOptimizer.js';
 import { ChatNotification } from './chatNotification.js';
 import { ChatSelectorConfig } from './chatSelectorConfig.js'; 
+import { Wfrp4ePortraitHandler } from './wfrp4ePortraitHandler.js';
 
 export class ChatSelector {
     static SETTINGS = {
@@ -104,9 +105,15 @@ export class ChatSelector {
 
         HpTintEffect.initialize();
         HpTintEffect.injectStyles();
+        
+        // 시스템별 핸들러 초기화
         if (game.system.id === 'dnd5e') {
             Dnd5ePortraitHandler.initialize();
         }
+        if (game.system.id === 'wfrp4e') { 
+            Wfrp4ePortraitHandler.initialize();
+        }
+        
         RubyTextHandler.initialize();
 
         this.tempCharacter = null;
@@ -453,6 +460,9 @@ export class ChatSelector {
         registerHidden(this.SETTINGS.HIDE_DND5E_PORTRAIT, Boolean, false, 'client', {
             onChange: () => this._updateChatStyles()
         });
+        registerHidden('hideWfrp4ePortrait', Boolean, false, 'client', {
+            onChange: () => Wfrp4ePortraitHandler._updateChatStyles()
+        });        
         registerHidden(this.SETTINGS.ALLOWED_MODULE_FLAGS, String, 'foundryvtt-simple-calendar,theatre', 'world');
 
         // --- Dropdown UI ---
@@ -1079,16 +1089,41 @@ export class ChatSelector {
         return portraitContainer;
     }
 
-    static _applyCommonStyles(html, message, portraitContainer) {
-        const useUserBorder = game.settings.get('character-chat-selector', this.SETTINGS.USE_USER_BORDER);
+static _applyCommonStyles(html, message, portraitContainer) {
+        const moduleID = 'character-chat-selector';
+        const allowPersonal = game.settings.get(moduleID, 'allowPersonalThemes');
+        const author = message.author || game.users.get(message.user);
+
+        // [수정] Personal Theme 로직을 여기서도 수행하여 메시지 박스 테두리 설정을 가져옴
+        let theme = {};
+        let sourceIsAuthor = false;
+
+        if (allowPersonal && author) {
+            const authorTheme = author.getFlag(moduleID, 'userTheme');
+            if (authorTheme) {
+                theme = authorTheme;
+                sourceIsAuthor = true;
+            }
+        }
+
+        // 헬퍼 함수: 작성자의 테마 설정이 있으면 그걸 쓰고, 아니면 내(GM/User) 설정 사용
+        // 주의: useUserBorder 같은 설정은 플래그에 저장되지 않았을 수도 있으므로(구버전 등) 체크 필요
+        // 현재 chatSelectorConfig.js 에서는 'chatBorderColor'나 'useUserBorder'를 userTheme 플래그에 저장하지 않고 있음.
+        // 하지만 'useUserColor'(초상화용)는 저장함. 
+        // 메시지 테두리에 대해서는 "작성자의 색상 사용" 여부를 전역 설정에서 따르거나, 
+        // 차후 업데이트로 개인 설정에 포함해야 하지만, 현재로서는 GM이 보는 화면에서 
+        // "유저 색상 사용"이 켜져있다면 작성자의 색상을 우선하도록 보정합니다.
+        
+        const useUserBorder = game.settings.get(moduleID, this.SETTINGS.USE_USER_BORDER);
         
         //  DOM 요소에 클래스 부여 (확실하게)
         const messageElement = (html instanceof HTMLElement) ? html : (html[0] || html);
         if (messageElement) messageElement.classList.add('ccs-custom-border');
 
+        // [수정] 작성자의 색상을 가져오도록 명시적 처리
         const chatBorderColor = useUserBorder 
-            ? (message.author?.color || message.user?.color || '#000000') 
-            : game.settings.get('character-chat-selector', this.SETTINGS.CHAT_BORDER_COLOR);
+            ? (author?.color || '#000000') 
+            : game.settings.get(moduleID, this.SETTINGS.CHAT_BORDER_COLOR);
 
         if (html.style) {
             html.style.setProperty('--ccs-chat-border-color', chatBorderColor);

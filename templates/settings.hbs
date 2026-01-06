@@ -155,11 +155,21 @@
                 <input type="color" name="chatBorderColor" value="{{settings.chatBorderColor}}">
             </div>
 
+            {{#if (eq systemId "dnd5e")}} 
             <div class="form-group">
                 <label>{{localize "CHATSELECTOR.Settings.HidePortrait.Name"}}</label>
                 <input type="checkbox" name="hideDnd5ePortrait" {{checked settings.hideDnd5ePortrait}}>
                 <p class="notes">{{localize "CHATSELECTOR.Settings.HidePortrait.Hint"}}</p>
             </div>
+            {{/if}}  
+
+            {{#if (eq systemId "wfrp4e")}} 
+            <div class="form-group">
+                <label>{{localize "CHATSELECTOR.Settings.HideWfrp4ePortrait.Name"}}</label>
+                <input type="checkbox" name="hideWfrp4ePortrait" {{checked settings.hideWfrp4ePortrait}}>
+                <p class="notes">{{localize "CHATSELECTOR.Settings.HideWfrp4ePortrait.Hint"}}</p>
+            </div>
+            {{/if}}            
 
             <h3>{{localize "CHATSELECTOR.Settings.Headers.Ruby"}}</h3>
             <div class="form-group">

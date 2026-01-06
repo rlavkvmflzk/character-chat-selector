@@ -203,6 +203,10 @@
                 "Name": "캐릭터 이름",
                 "Flavor": "플레이버 텍스트",
                 "Content": "테스트 메시지입니다."
+            },
+            "HideWfrp4ePortrait": {
+                "Name": "WFRP4e 초상화 숨기기",
+                "Hint": "활성화하면 기본 WFRP4e 채팅 초상화를 숨깁니다. 챗 셀렉터 모듈과 함께 사용할 때 초상화가 중복되는 것을 방지합니다."
             }
         },
         "ConfigureHotkeys": "단축키 설정",
