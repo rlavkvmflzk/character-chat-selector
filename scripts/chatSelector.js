@@ -1105,14 +1105,6 @@ static _applyCommonStyles(html, message, portraitContainer) {
                 sourceIsAuthor = true;
             }
         }
-
-        // 헬퍼 함수: 작성자의 테마 설정이 있으면 그걸 쓰고, 아니면 내(GM/User) 설정 사용
-        // 주의: useUserBorder 같은 설정은 플래그에 저장되지 않았을 수도 있으므로(구버전 등) 체크 필요
-        // 현재 chatSelectorConfig.js 에서는 'chatBorderColor'나 'useUserBorder'를 userTheme 플래그에 저장하지 않고 있음.
-        // 하지만 'useUserColor'(초상화용)는 저장함. 
-        // 메시지 테두리에 대해서는 "작성자의 색상 사용" 여부를 전역 설정에서 따르거나, 
-        // 차후 업데이트로 개인 설정에 포함해야 하지만, 현재로서는 GM이 보는 화면에서 
-        // "유저 색상 사용"이 켜져있다면 작성자의 색상을 우선하도록 보정합니다.
         
         const useUserBorder = game.settings.get(moduleID, this.SETTINGS.USE_USER_BORDER);
         
@@ -1120,7 +1112,7 @@ static _applyCommonStyles(html, message, portraitContainer) {
         const messageElement = (html instanceof HTMLElement) ? html : (html[0] || html);
         if (messageElement) messageElement.classList.add('ccs-custom-border');
 
-        // [수정] 작성자의 색상을 가져오도록 명시적 처리
+        // 작성자의 색상을 가져오도록 명시적 처리
         const chatBorderColor = useUserBorder 
             ? (author?.color || '#000000') 
             : game.settings.get(moduleID, this.SETTINGS.CHAT_BORDER_COLOR);
