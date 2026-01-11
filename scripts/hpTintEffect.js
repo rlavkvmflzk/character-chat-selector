@@ -175,6 +175,9 @@ export class HpTintEffect {
     }
 
     static applyTintToPortrait(portraitContainer, message) {
+        // [수정] portraitContainer가 없으면(null이면) 중단하는 코드 추가
+        if (!portraitContainer) return;
+
         portraitContainer.dataset.messageId = message.id;
         const actor = this._getActorFromSpeaker(message.speaker);
         this._updateTintForElement(portraitContainer, actor);

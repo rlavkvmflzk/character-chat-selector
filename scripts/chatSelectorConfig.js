@@ -41,7 +41,9 @@ export class ChatSelectorConfig extends HandlebarsApplicationMixin(ApplicationV2
             'dropdownBackground', 'dropdownTextColor', 'dropdownBorderColor', 'dropdownHoverColor', 'enableThumbnailPreview',
             'enableRuby', 'rubyTextSize', 'rubyTextColor',
             'enableChatOptimization', 'maxChatMessages', 'chatBatchSize',
-            'enableNotificationSound', 'playNotificationForSelf', 'notificationSoundPath', 'notificationVolume'
+            'enableNotificationSound', 'playNotificationForSelf', 'notificationSoundPath', 'notificationVolume',
+            'enableHotkeys',  
+            'hotkeyModifier'  
         ];
 
         settingKeys.forEach(key => {
