@@ -212,11 +212,12 @@ export class ChatSelector {
             }
 
             if (ChatSelector.tempCharacter) {
+                const tempSpeaker = { alias: ChatSelector.tempCharacter.name };
                 if (!message.startsWith('/')) {
                     const processedMessage = RubyTextHandler.processMessage(message);
                     return ChatMessage.create({
                         user: game.user.id,
-                        speaker: { alias: ChatSelector.tempCharacter.name },
+                        speaker: tempSpeaker,
                         content: processedMessage,
                         style: CHAT_STYLES.IC
                     });
@@ -226,8 +227,8 @@ export class ChatSelector {
                     const emoteText = message.slice(cmdLength);
                     return ChatMessage.create({
                         user: game.user.id,
-                        speaker: speaker,
-                        content: `${speaker.alias} ${RubyTextHandler.processMessage(emoteText)}`,
+                        speaker: tempSpeaker,
+                        content: `${tempSpeaker.alias} ${RubyTextHandler.processMessage(emoteText)}`,
                         style: CHAT_STYLES.EMOTE
                     }, { chatBubble: true }); 
                 }
@@ -488,8 +489,12 @@ export class ChatSelector {
 
         // --- Chat Optimization ---
         registerHidden('enableChatOptimization', Boolean, true, 'client', { requiresReload: true });
-        registerHidden('maxChatMessages', Number, 50, 'client', { onChange: () => ui.chat?.render(true) });
-        registerHidden('chatBatchSize', Number, 20);
+        registerHidden('maxChatMessages', Number, 50, 'client', {
+            onChange: () => ChatOptimizer.updateMax()
+        });
+        registerHidden('chatBatchSize', Number, 20, 'client', {
+            onChange: () => ChatOptimizer.updateBatchSize()
+        });
 
         // --- Notification Sound ---
         registerHidden('enableNotificationSound', Boolean, false);
@@ -942,31 +947,33 @@ export class ChatSelector {
         if (!header) return;
 
         const chatLog = document.getElementById('chat-log');
-        const wasAtBottom = chatLog ? (chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 50) : false;
-        const isMyMessage = message.isAuthor;
-
-        const enforceBottom = () => {
-            if ((wasAtBottom || isMyMessage) && chatLog) {
-                chatLog.scrollTop = chatLog.scrollHeight;
-            }
-        };
+        const shouldScrollToBottom = message.isAuthor || 
+            (chatLog && (chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 50));
 
         const portraitContainer = this._createPortraitElement(message, imgSrc);
 
-        const img = portraitContainer.querySelector('img');
-        if (img) {
-            img.onload = () => {
-                enforceBottom();
-                requestAnimationFrame(enforceBottom);
-            };
-        }
+        const findSystemPortrait = () => {
+            const selectors = [
+                'a.avatar:not(.chat-portrait-container)',
+                '.portrait.token:not(.chat-portrait-container)',
+                '.message-token:not(.chat-portrait-container)',
+                '.message-portrait:not(.chat-portrait-container)'
+            ];
+
+            for (const selector of selectors) {
+                const candidate = header.querySelector(selector);
+                if (candidate) return candidate;
+            }
+
+            return null;
+        };
 
         const injectPortrait = () => {
             if (header.querySelector('.chat-portrait-container')) return;
             
-            messageElement.classList.add('ccs-custom-border'); 
+            messageElement.classList.add('ccs-custom-border');
 
-            const existingAvatar = header.querySelector('a.avatar');
+            const existingAvatar = findSystemPortrait();
             const senderEl = header.querySelector('.message-sender');
 
             if (existingAvatar) {
@@ -978,26 +985,20 @@ export class ChatSelector {
             }
 
             this._applyCommonStyles(messageElement, message, portraitContainer);
-            enforceBottom();
         };
 
         injectPortrait();
 
-        const observer = new MutationObserver((mutations, obs) => {
-            const avatar = header.querySelector('a.avatar');
-            if (avatar && !avatar.classList.contains('chat-portrait-container')) {
-                avatar.replaceWith(portraitContainer);
-                this._applyCommonStyles(messageElement, message, portraitContainer);
-                enforceBottom();
-                obs.disconnect();
-            }
-        });
-        observer.observe(header, { childList: true, subtree: true });
-
         setTimeout(() => {
-            observer.disconnect();
-            injectPortrait();
-            enforceBottom();
+            const foundryAvatar = findSystemPortrait();
+            if (foundryAvatar) {
+                foundryAvatar.replaceWith(portraitContainer);
+                this._applyCommonStyles(messageElement, message, portraitContainer);
+            }
+            
+            if (shouldScrollToBottom && ui.chat?.scrollBottom) {
+                ui.chat.scrollBottom({ waitImages: true });
+            }
         }, 0);
     }
 
