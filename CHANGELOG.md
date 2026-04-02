@@ -1,3 +1,12 @@
+## 📢 Update: Character Chat Selector v3.4.6
+
+### Changed
+- Now supports Foundry VTT V13 and V14. Previous versions are no longer supported.
+
+### 🐛 Bug Fixes
+- Fixed autocomplete crash on V14 due to chat input element changes.
+- Fixed 404 errors when autocomplete displayed actors without a portrait image.
+
 ## 📢 Update: Character Chat Selector v3.4.5
 
 ### 🐛 Bug Fixes

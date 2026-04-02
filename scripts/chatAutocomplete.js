@@ -88,7 +88,7 @@ export class ChatAutocomplete {
         let searchTimeout = null;
 
         const inputHandler = (e) => {
-            const val = e.target.value;
+            const val = e.target.value ?? e.target.textContent ?? "";
             if (searchTimeout) clearTimeout(searchTimeout);
 
             searchTimeout = setTimeout(() => {
@@ -177,7 +177,7 @@ export class ChatAutocomplete {
             div.dataset.index = index;
 
             div.innerHTML = `
-            <img src="${actor.img}" width="24" height="24" style="border:none; vertical-align:middle;"/>
+            <img src="${actor.img || "icons/svg/mystery-man.svg"}" width="24" height="24" style="border:none; vertical-align:middle;"/>
             <span>${actor.name}</span>
             `;
 

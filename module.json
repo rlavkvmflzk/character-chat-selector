@@ -2,11 +2,11 @@
     "id": "character-chat-selector",
     "title": "Character Chat Selector",
     "description": "Provides a tokenless selector for Actors in your scene to chat with, as well as chat message customization.",
-    "version": "3.4.5",
+    "version": "3.4.6",
     "compatibility": {
         "minimum": "13",
-        "verified": "13",
-        "maximum": "13"
+        "verified": "14",
+        "maximum": "14"
     },
     "scripts": [
         "https://cdn.jsdelivr.net/npm/marked/marked.min.js",

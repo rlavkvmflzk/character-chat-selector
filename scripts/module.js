@@ -4,17 +4,14 @@ import { ChatEditor } from './chatEditor.js';
 import { ChatAutocomplete } from './chatAutocomplete.js';
 import { ChatOptimizer } from './chatOptimizer.js';
 import { ChatNotification } from './chatNotification.js'; 
-import { ChatSelectorConfig } from './chatSelectorConfig.js'; 
-
 Hooks.once('init', () => {
-    console.log('Characer Chat Selector: Initializing...');
+    console.log('Character Chat Selector: Initializing...');
     ChatSelector.initialize();
     HotkeyManager.initialize();
     ChatEditor.initialize(); 
     ChatAutocomplete.initialize();
     ChatOptimizer.initialize();    
     ChatNotification.initialize();
-    ChatSelectorConfig.initialize();
 });
 
 // 채팅 메시지 생성 전에 추가 처리
