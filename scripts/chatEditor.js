@@ -9,7 +9,7 @@ class ChatEditorApp extends Application {
     }
 
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: "chat-editor-app",
             title: "Edit Message",
             width: 720,

@@ -1,3 +1,8 @@
+## 📢 Update: Character Chat Selector v3.4.7
+
+### 🐛 Bug Fixes
+- Fixed chat editor crash on V14 caused by deprecated global `mergeObject` call (`ReferenceError: mergeObject is not defined`).
+
 ## 📢 Update: Character Chat Selector v3.4.6
 
 ### Changed
