@@ -1,7 +1,7 @@
 ## 📢 Update: Character Chat Selector v3.4.8
 
 ### 🐛 Bug Fixes
-- Fixed the speaker override hook hijacking chat messages from modules that manage their own speaker (for example, Smartphone Widget's Messages App). Messages now pass through unchanged when they carry a `smartphone-widget` flag or a `character-chat-selector.skip` flag. Previously, if an actor was selected in the Chat Selector (e.g. auto-switched by Visual Novel Maker), a phone message would show up in the chat log under that actor instead of its intended sender.
+- The speaker override was too aggressive — it replaced the sender on every outgoing chat message, including ones that other modules constructed with a deliberate speaker. The hook now respects messages that carry a `smartphone-widget` flag, or a generic `character-chat-selector.skip` flag any module can set to preserve its own speaker. This fixes Smartphone Widget's Messages App showing up under the selector's active character instead of the phone contact.
 
 ## 📢 Update: Character Chat Selector v3.4.7
 
