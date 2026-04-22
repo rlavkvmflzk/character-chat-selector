@@ -16,6 +16,13 @@ Hooks.once('init', () => {
 
 // 채팅 메시지 생성 전에 추가 처리
 Hooks.on('preCreateChatMessage', (message, options, userId) => {
+    // 다른 모듈이 발화자를 직접 관리하는 메시지(스마트폰 메시지 앱, 갤러리 공유 등)는
+    // 덮어쓰지 않고 통과시킵니다. 모듈이 자체 플래그로 의사를 밝혔거나, 범용
+    // bypass 플래그(character-chat-selector.skip)를 설정한 경우 모두 해당합니다.
+    const flags = message.flags ?? {};
+    if (flags["smartphone-widget"]) return true;
+    if (flags["character-chat-selector"]?.skip) return true;
+
     const select = document.querySelector('.character-select');
     if (select && select.value) {
         const actor = game.actors.get(select.value);
